@@ -15,7 +15,7 @@ def policy_eval (policy):
     # print(V)
     while True:
         # for each state
-        Delta =  0
+        Delta = 0
         for s in range(env.nS):
             v = V[s]
             V_s = 0
