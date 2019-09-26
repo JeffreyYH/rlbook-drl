@@ -17,7 +17,7 @@ def policy_eval (policy):
         # for each state
         Delta =  0
         for s in range(env.nS):
-            v = V[s]
+            pre_v = V[s]
             V_s = 0
             # for each action in current state
             for a in range(env.nA):
@@ -30,7 +30,7 @@ def policy_eval (policy):
             V[s] = V_s
 
             # see if the value function converge
-            Delta = max(Delta, abs(v - V[s]))
+            Delta = max(Delta, abs(pre_v - V[s]))
 
         if Delta < theta:
             break
