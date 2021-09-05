@@ -20,7 +20,7 @@ class TenArmedTestbed:
             a = self.greedy(q_a_vec)
         return a
 
-    def tenArmed_Testbed(self):
+    def simulate(self):
         r_all_vec = []
         for run_idx in range(self.num_run):
             r_vec = []
@@ -47,4 +47,4 @@ class TenArmedTestbed:
 
 
 if __name__ == "__main__":
-    TenArmedTestbed().tenArmed_Testbed()
+    TenArmedTestbed().simulate()
