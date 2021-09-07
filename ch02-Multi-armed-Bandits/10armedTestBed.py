@@ -29,7 +29,7 @@ class TenArmedTestbed:
         if (self.method == "sample_average"):
             return 1
 
-    def simulate(self, ε_list):
+    def run_bandits(self, ε_list):
         for ε in ε_list:
             R_allRun = []
             ifOptimalAction_allRun = []
@@ -75,4 +75,4 @@ class TenArmedTestbed:
             
 if __name__ == "__main__":
     ε_list = [0, 0.01, 0.1]
-    TenArmedTestbed().simulate(ε_list)
+    TenArmedTestbed().run_bandits(ε_list)
