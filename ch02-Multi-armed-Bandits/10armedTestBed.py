@@ -2,7 +2,6 @@ import os
 from matplotlib.pyplot import xlabel 
 import numpy as np
 import matplotlib.pylab as plt
-from numpy.core.fromnumeric import argmax
 
 class TenArmedTestbed:
     def __init__(self):
@@ -51,7 +50,7 @@ class TenArmedTestbed:
                     a_times[a] += 1
                     q_estimated[a] = r_sum[a]/a_times[a]
                     # see how good the policy is, in terms of picking optimal action
-                    a_optimal = argmax(self.q_true)
+                    a_optimal = np.argmax(self.q_true)
                     ifOptimalAction.append(a_optimal == a)
                 R_allRun.append(R_thisRun)
                 ifOptimalAction_allRun.append(ifOptimalAction)
@@ -77,5 +76,3 @@ class TenArmedTestbed:
 if __name__ == "__main__":
     ε_list = [0, 0.01, 0.1]
     TenArmedTestbed().simulate(ε_list)
-
-
