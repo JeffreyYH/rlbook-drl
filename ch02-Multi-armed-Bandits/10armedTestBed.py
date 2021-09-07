@@ -1,4 +1,5 @@
-import os 
+import os
+from matplotlib.pyplot import xlabel 
 import numpy as np
 import matplotlib.pylab as plt
 
@@ -8,22 +9,17 @@ class TenArmedTestbed:
         self.num_runs = 2000
         self.T = 1000
         self.method = "sample_average"
-        self.q_true = []
-        for k in range(self.num_k):
-            q_a = np.random.normal(0, 1, 1)
-            self.q_true.append(q_a)
-        self.q_true = np.array(self.q_true)
+        # self.q_true = np.random.randn(self.num_k)
+        self.q_true = np.random.normal(0, 1, self.num_k)
 
-    def ε_greedy(self, q_a_vec, ε):
+    def ε_greedy(self, q_estimated, ε):
         """ when ε=0, it is greedy """
         p = np.random.uniform(0, 1)
-        if (p <= ε):
-            a = np.random.choice(range(10))
+        if (p < ε):
+            return np.random.choice(range(self.num_k))
         else:
-            q_a_vec = np.array(q_a_vec)
-            a = np.argmax(q_a_vec)
-        return a
-    
+            return np.argmax(np.array(q_estimated))
+        
     def estimate_Q(self, t):
         """ 
         choise of method:
@@ -33,31 +29,38 @@ class TenArmedTestbed:
         if (self.method == "sample_average"):
             return 1
 
-    def simulate(self):
-        R_allRun = []
-        for run in range(self.num_runs):
-            q_estimated = np.zeros(self.num_k)
-            a_times = np.zeros(self.num_k)
-            R_thisRun = []
-            r = 0
-            r_sum = 0
-            for t in range(self.T):
-                a = self.ε_greedy(q_estimated, 0)
-                # get rewards
-                r = np.random.normal(self.q_true[a], 1, 1)
-                R_thisRun.append(r[0])
-                # update estimated q
-                r_sum += r
-                a_times[a] += 1
-                q_estimated[a] = r_sum/a_times[a]
-            R_allRun.append(R_thisRun)
-        R_allRun_np = np.array(R_allRun)
-        # plot results
-        R_allRun_ave_np = np.sum(R_allRun_np, axis=0)/self.num_runs
-        plt.plot(R_allRun_ave_np)
+    def simulate(self, ε_list):
+        for ε in ε_list:
+            R_allRun = []
+            for run in range(self.num_runs):
+                q_estimated = np.zeros(self.num_k)
+                a_times = np.zeros(self.num_k)
+                r_sum = np.zeros(self.num_k)
+                R_thisRun = []
+                # r = 0
+                # r_sum = 0
+                for t in range(self.T):
+                    a = self.ε_greedy(q_estimated, ε)
+                    # get rewards
+                    r = np.random.normal(self.q_true[a], 1)
+                    R_thisRun.append(r)
+                    # update estimated q
+                    # method: sample_average
+                    r_sum[a] += r
+                    a_times[a] += 1
+                    q_estimated[a] = r_sum[a]/a_times[a]
+                R_allRun.append(R_thisRun)
+            R_allRun_np = np.array(R_allRun)     
+            # plot fig. 2.2
+            R_allRun_ave_np = np.sum(R_allRun_np, axis=0)/self.num_runs
+            plt.plot(R_allRun_ave_np, label=("ε = %.2f" %ε))
+            plt.xlabel("steps")
+            plt.ylabel("average rewards")
+            plt.legend()
         plt.show()
-        
+            
 if __name__ == "__main__":
-    TenArmedTestbed().simulate()
+    ε_list = [0, 0.01, 0.1]
+    TenArmedTestbed().simulate(ε_list)
 
 
