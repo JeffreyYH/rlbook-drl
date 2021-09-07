@@ -2,6 +2,7 @@ import os
 from matplotlib.pyplot import xlabel 
 import numpy as np
 import matplotlib.pylab as plt
+from numpy.core.fromnumeric import argmax
 
 class TenArmedTestbed:
     def __init__(self):
@@ -32,13 +33,13 @@ class TenArmedTestbed:
     def simulate(self, ε_list):
         for ε in ε_list:
             R_allRun = []
+            ifOptimalAction_allRun = []
             for run in range(self.num_runs):
                 q_estimated = np.zeros(self.num_k)
                 a_times = np.zeros(self.num_k)
                 r_sum = np.zeros(self.num_k)
                 R_thisRun = []
-                # r = 0
-                # r_sum = 0
+                ifOptimalAction = []
                 for t in range(self.T):
                     a = self.ε_greedy(q_estimated, ε)
                     # get rewards
@@ -49,11 +50,24 @@ class TenArmedTestbed:
                     r_sum[a] += r
                     a_times[a] += 1
                     q_estimated[a] = r_sum[a]/a_times[a]
+                    # see how good the policy is, in terms of picking optimal action
+                    a_optimal = argmax(self.q_true)
+                    ifOptimalAction.append(a_optimal == a)
                 R_allRun.append(R_thisRun)
-            R_allRun_np = np.array(R_allRun)     
+                ifOptimalAction_allRun.append(ifOptimalAction)
+            # get final average reward, percentage of optimal action
+            R_allRun_np = np.array(R_allRun) 
+            R_allRun_ave_np = np.sum(R_allRun_np, axis=0)/self.num_runs  
+            ifOptimalAction_allRun_np = np.array(ifOptimalAction_allRun)  
+            ifOptimalAction_allRun_ave_np = np.sum(ifOptimalAction_allRun_np, axis=0)/self.num_runs  
             # plot fig. 2.2
-            R_allRun_ave_np = np.sum(R_allRun_np, axis=0)/self.num_runs
-            plt.plot(R_allRun_ave_np, label=("ε = %.2f" %ε))
+            # plt.subplot(2,1,1)
+            # plt.plot(R_allRun_ave_np, label=("ε = %.2f" %ε))
+            # plt.xlabel("steps")
+            # plt.ylabel("average rewards")
+            # plt.legend()
+            # plt.subplot(2,1,1)
+            plt.plot(ifOptimalAction_allRun_ave_np, label=("ε = %.2f" %ε))
             plt.xlabel("steps")
             plt.ylabel("average rewards")
             plt.legend()
