@@ -59,17 +59,18 @@ class TenArmedTestbed:
             R_allRun_np = np.array(R_allRun) 
             R_allRun_ave_np = np.sum(R_allRun_np, axis=0)/self.num_runs  
             ifOptimalAction_allRun_np = np.array(ifOptimalAction_allRun)  
-            ifOptimalAction_allRun_ave_np = np.sum(ifOptimalAction_allRun_np, axis=0)/self.num_runs  
+            OptimalAction_percentage = (np.sum(ifOptimalAction_allRun_np, axis=0)/self.num_runs) * 100 
+
             # plot fig. 2.2
-            # plt.subplot(2,1,1)
-            # plt.plot(R_allRun_ave_np, label=("ε = %.2f" %ε))
-            # plt.xlabel("steps")
-            # plt.ylabel("average rewards")
-            # plt.legend()
-            # plt.subplot(2,1,1)
-            plt.plot(ifOptimalAction_allRun_ave_np, label=("ε = %.2f" %ε))
+            plt.subplot(2,1,1)
+            plt.plot(R_allRun_ave_np, label=("ε = %.2f" %ε))
             plt.xlabel("steps")
             plt.ylabel("average rewards")
+            plt.legend()
+            plt.subplot(2,1,2)
+            plt.plot(OptimalAction_percentage, label=("ε = %.2f" %ε))
+            plt.xlabel("steps")
+            plt.ylabel("% Optimal action")
             plt.legend()
         plt.show()
             
