@@ -77,7 +77,7 @@ class TenArmedTestbed:
         self.OptimalAction_percentage = (np.sum(ifOptimalAction_allRun_np, axis=0)/self.num_runs) * 100 
 
     def test_ε_greedy_sampleAverage(self):
-        """ get the results shown in figure 2.2"""
+        """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
         for ε in ε_list:
             self.run_bandits(ε, "sample_average", "ε_greedy", "realistic")
@@ -102,7 +102,7 @@ class TenArmedTestbed:
             self.run_bandits(0.1, update_method, "ε_greedy", "realistic")
             end_time = time.time()
             time_used = end_time - begin_time
-            print("Runing time of update method %s is %f" %(update_method, time_used))
+            print("Running time of update method %s is %f" %(update_method, time_used))
 
     def test_optimisticInitialValues(self):
         """ section 2.6, figure 2.3 """
