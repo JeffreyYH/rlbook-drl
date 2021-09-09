@@ -148,6 +148,7 @@ class TenArmedTestbed:
         plt.show()
 
     def test_gradientBandits(self):
+        # TODO: fix some numeric issues
         self.run_bandits(0.1, "sample_average", "gradientBandits", "realistic")
 
 
