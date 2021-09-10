@@ -26,10 +26,10 @@ class TenArmedTestbed:
         c = 2.0
         return np.argmax(q_estimated + c*np.sqrt(np.log(t+1)/(N_a+1e-9)))        
 
-    def run_bandits(self, ε, update_method, action_selection, init_method):
+    def run_bandits(self, ε, update_method, action_selection, α, init_method):
         """ 
         update_method: "sample_average", "incremental"
-        action_selection: "ε_greedy", "UCB", "gradientBandits"
+        action_selection: "ε_greedy", "UCB", "gradient_baseline", "gradient_noBaseline"
         init_method: "optimistic", "realistic"
         """
         R_allRun = []
@@ -54,7 +54,7 @@ class TenArmedTestbed:
                     a = self.ε_greedy(q_estimated, ε)
                 elif action_selection == "UCB":
                     a = self.UCB_actionSelection(q_estimated, t, N_a)
-                elif action_selection == "gradientBandits":
+                elif action_selection == "gradient_baseline" or action_selection == "gradient_noBaseline":
                     for a in range(self.num_k):
                         π[a] = np.exp(H[a]) / np.sum(H)
                     a = random.choices(possible_actions, π)[0]
@@ -62,16 +62,19 @@ class TenArmedTestbed:
                 r = np.random.normal(self.q_true[a], 1)
                 R_thisRun.append(r)
                 # some updates for gradient based method
-                if action_selection == "gradientBandits":
-                    α = 0.1 # step size
+                if action_selection == "gradient_baseline" or action_selection == "gradient_noBaseline":
                     if t <= 1:
                         r_ave = 0
                     else:
                         R_prevRun = R_thisRun
                         R_prevRun.pop()
                         r_ave = sum(R_prevRun)/(t-1)
-                    H = H - α*(r - r_ave) * np.array(π)
-                    H[a] = H[a] + α*(r - r_ave) * (1 - π[a])
+                    if action_selection == "gradient_baseline":
+                        H = H - α*(r - r_ave) * np.array(π)
+                        H[a] = H[a] + α*(r - r_ave) * (1 - π[a])
+                    if action_selection == "gradient_noBaseline":
+                        H = H - α * r * np.array(π)
+                        H[a] = H[a] + α * r * (1 - π[a])
                 # q estimation updating method
                 if update_method == "sample_average":
                     r_sum[a] += r
@@ -149,8 +152,17 @@ class TenArmedTestbed:
 
     def test_gradientBandits(self):
         # TODO: fix some numeric issues
-        self.run_bandits(0.1, "sample_average", "gradientBandits", "realistic")
-
+        # FIXME: buggy plot
+        α_list = [0.1, 0.4]
+        action_selections = ["gradient_baseline", "gradient_noBaseline"]
+        for action_selection in action_selections:
+            for α in α_list:
+                self.run_bandits(0.1, "sample_average", action_selection, α, "realistic")
+                plt.plot(self.OptimalAction_percentage, label=("%s, %s" %(action_selection, α)))
+                plt.xlabel("steps")
+                plt.ylabel("% Optimal action")
+                plt.legend()
+        plt.show()
 
 if __name__ == "__main__":
 #     TenArmedTestbed().test_ε_greedy_sampleAverage()
