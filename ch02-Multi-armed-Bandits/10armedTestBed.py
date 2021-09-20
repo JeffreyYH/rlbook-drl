@@ -19,14 +19,14 @@ class TenArmedTestbed:
         else:
             return np.argmax(np.array(q_estimated))
     
-    def UCB_actionSelection(self, q_estimated, t, N_a):
-        c = 2.0
+    def UCB_actionSelection(self, q_estimated, c, t, N_a):
         return np.argmax(q_estimated + c*np.sqrt(np.log(t+1)/(N_a+1e-9)))        
 
-    def run_bandits(self, ε, update_method, action_selection, α, init_method):
+    def run_bandits(self, update_method, action_selection, init_method):
         """ 
         update_method: "sample_average", "incremental"
-        action_selection: "ε_greedy", "UCB", "gradient_baseline", "gradient_noBaseline"
+        action_selection[0] dentotes names: "ε_greedy", "UCB", "Boltzmann", "gradient_baseline", "gradient_noBaseline"
+        action_selection[0] dentotes parameters: ε, c, temperature, ..., ...
         init_method: "optimistic", "realistic"
         """
         R_allRun = []
@@ -51,10 +51,12 @@ class TenArmedTestbed:
             ## run T steps
             for t in range(self.T):
                 # get action
-                if action_selection == "ε_greedy":
+                if action_selection[0] == "ε_greedy":
+                    ε = action_selection[1]
                     a = self.ε_greedy(q_estimated, ε)
                 elif action_selection == "UCB":
-                    a = self.UCB_actionSelection(q_estimated, t, N_a)
+                    c = action_selection[1]
+                    a = self.UCB_actionSelection(q_estimated, c, t, N_a)
                 elif action_selection == "gradient_baseline" or action_selection == "gradient_noBaseline":
                     for a in range(self.num_k):
                         π[a] = np.exp(H[a]) / np.sum(H)
@@ -64,7 +66,8 @@ class TenArmedTestbed:
                 R_thisRun.append(r)
                 N_a[a] += 1
                 ## some updates for gradient based method
-                if action_selection == "gradient_baseline" or action_selection == "gradient_noBaseline":
+                if action_selection[0] == "gradient_baseline" or action_selection[0] == "gradient_noBaseline":
+                    α = action_selection[1]
                     if t <= 1:
                         r_ave = 0
                     else:
@@ -104,7 +107,8 @@ class TenArmedTestbed:
         """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
         for ε in ε_list:
-            self.run_bandits(ε, "incremental", "ε_greedy", 0, "realistic")
+            action_section = ["ε_greedy", ε]
+            self.run_bandits("incremental", action_section, "realistic")
             # plot fig. 2.2
             plt.subplot(2,1,1)
             plt.plot(self.R_allRun_ave_np, label=("ε = %.2f" %ε))
@@ -123,7 +127,8 @@ class TenArmedTestbed:
         update_methods = ["sample_average", "incremental"]
         for update_method in update_methods:
             begin_time = time.time()
-            self.run_bandits(0.1, update_method, "ε_greedy", 0, "realistic")
+            action_section = ["ε_greedy", 0.1]
+            self.run_bandits("incremental", action_section, "realistic")
             end_time = time.time()
             time_used = end_time - begin_time
             print("Running time of update method %s is %f" %(update_method, time_used))
@@ -142,9 +147,9 @@ class TenArmedTestbed:
 
     def test_UCB(self):
         """ section 2.7, figure 2.4 """
-        action_selections = ["ε_greedy", "UCB"]
+        action_selections = [["ε_greedy", 0.1], ["UCB", 2.0]]
         for action_selection in action_selections:
-            self.run_bandits(0.1, "sample_average", action_selection, "realistic")
+            self.run_bandits("sample_average", action_selection, "realistic")
             plt.plot(self.R_allRun_ave_np, label=("%s" %action_selection))
             plt.xlabel("steps")
             plt.ylabel("% Optimal action")
