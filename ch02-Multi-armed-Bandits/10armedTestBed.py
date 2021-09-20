@@ -192,7 +192,7 @@ class TenArmedTestbed:
             plt.show()
         
         if test_actionSelection_algo == "Boltzmann":
-            T_list = [1, 3, 10, 30, 100]
+            T_list = [1, 30, 100]
             init_method = ["realistic"]
             for T in T_list:
                 action_section = ["Boltzmann", T]
