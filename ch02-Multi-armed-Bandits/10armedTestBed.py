@@ -8,7 +8,7 @@ import argparse
 class TenArmedTestbed:
     def __init__(self):
         self.num_k = 10 # 10-armed bandits
-        self.num_runs = 2000
+        self.num_runs = 20
         self.T = 1000
 
     def ε_greedy(self, q_estimated, ε):
@@ -31,6 +31,7 @@ class TenArmedTestbed:
         init_method[1] denotes value: some specific value, none (0 by default)
         """
         R_allRun = []
+        expected_R_allRun = []
         ifOptimalAction_allRun = []
         for run in range(self.num_runs):
             ## initialization
@@ -47,6 +48,7 @@ class TenArmedTestbed:
             possible_actions = range(self.num_k)
             π = [0]*self.num_k
             R_thisRun = []
+            expected_R_thisRun = []
             ifOptimalAction = []
 
             ## run T steps
@@ -96,11 +98,20 @@ class TenArmedTestbed:
                 # see how good the policy is, in terms of picking optimal action
                 a_optimal = np.argmax(self.q_true)
                 ifOptimalAction.append(a_optimal == a)
+                
+                # get expected reward
+                if action_selection[0] == "ε_greedy":
+                    expected_r =  (1-ε)*self.q_true[np.argmax(q_estimated)]  + ε*np.mean(self.q_true)
+                    expected_R_thisRun.append(expected_r)
+
+            if action_selection[0] == "ε_greedy":
+                expected_R_allRun.append(expected_R_thisRun)
             R_allRun.append(R_thisRun)
             ifOptimalAction_allRun.append(ifOptimalAction)
 
         ## get final average reward, percentage of optimal action
         self.R_allRun_ave_np = np.sum(np.array(R_allRun) , axis=0)/self.num_runs  
+        self.expected_R_allRun_ave_np = np.sum(np.array(expected_R_allRun) , axis=0)/self.num_runs  
         self.OptimalAction_percentage = (np.sum(np.array(ifOptimalAction_allRun), axis=0)/self.num_runs) * 100 
 
 
@@ -124,6 +135,25 @@ class TenArmedTestbed:
             plt.legend()
         plt.show()
     
+    def test_expectedRewards(self):
+        ε_list = [0, 0.001, 0.01, 0.1, 1.0]
+        init_method = ["realistic"]
+        for ε in ε_list:
+            action_section = ["ε_greedy", ε]
+            self.run_bandits("incremental", action_section, init_method)
+            # plot fig. 2.2
+            plt.subplot(2,1,1)
+            plt.plot(self.R_allRun_ave_np, label=("ε = %.2f" %ε))
+            plt.xlabel("steps")
+            plt.ylabel("average rewards")
+            plt.legend()
+            plt.subplot(2,1,2)
+            plt.plot(self.expected_R_allRun_ave_np, label=("ε = %.2f" %ε))
+            plt.xlabel("steps")
+            plt.ylabel("average expected rewards")
+            plt.legend()
+        plt.show()
+
     def test_incrementalUpdate(self):
         """ section 2.4 """
         update_methods = ["sample_average", "incremental"]
@@ -187,7 +217,8 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
-    TenArmedTestbed().test_ε_greedy_sampleAverage()
+    # TenArmedTestbed().test_ε_greedy_sampleAverage()
+    TenArmedTestbed().test_expectedRewards()
     # TenArmedTestbed().test_incrementalUpdate()
     # TenArmedTestbed().test_optimisticInitialValues()
     # TenArmedTestbed().test_UCB()
