@@ -26,8 +26,9 @@ class TenArmedTestbed:
         """ 
         update_method: "sample_average", "incremental"
         action_selection[0] dentotes names: "ε_greedy", "UCB", "Boltzmann", "gradient_baseline", "gradient_noBaseline"
-        action_selection[0] dentotes parameters: ε, c, temperature, ..., ...
-        init_method: "optimistic", "realistic"
+        action_selection[0] dentotes parameters: ε,       c,    temperature,    ...,                 ...
+        init_method[0] denotes name: "optimistic", "realistic"
+        init_method[1] denotes value: some specific value, none (0 by default)
         """
         R_allRun = []
         ifOptimalAction_allRun = []
@@ -35,10 +36,10 @@ class TenArmedTestbed:
             ## initialization
             self.q_true = np.random.normal(0, 1, self.num_k)
             # init of estimation Q
-            if init_method == "realistic":
+            if init_method[0] == "realistic":
                 q_estimated = np.zeros(self.num_k)
-            elif init_method == "optimistic":
-                mul = 5
+            elif init_method[0] == "optimistic":
+                mul = init_method[1]
                 q_estimated = mul * np.ones(self.num_k)
             N_a = np.zeros(self.num_k)
             r_sum = np.zeros(self.num_k)
@@ -106,9 +107,10 @@ class TenArmedTestbed:
     def test_ε_greedy_sampleAverage(self):
         """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
+        init_method = ["realistic"]
         for ε in ε_list:
             action_section = ["ε_greedy", ε]
-            self.run_bandits("incremental", action_section, "realistic")
+            self.run_bandits("incremental", action_section, init_method)
             # plot fig. 2.2
             plt.subplot(2,1,1)
             plt.plot(self.R_allRun_ave_np, label=("ε = %.2f" %ε))
@@ -125,17 +127,18 @@ class TenArmedTestbed:
     def test_incrementalUpdate(self):
         """ section 2.4 """
         update_methods = ["sample_average", "incremental"]
+        action_section = ["ε_greedy", 0.1]
+        init_method = ["realistic"]
         for update_method in update_methods:
             begin_time = time.time()
-            action_section = ["ε_greedy", 0.1]
-            self.run_bandits("incremental", action_section, "realistic")
+            self.run_bandits("incremental", action_section, init_method)
             end_time = time.time()
             time_used = end_time - begin_time
             print("Running time of update method %s is %f" %(update_method, time_used))
 
     def test_optimisticInitialValues(self):
         """ section 2.6, figure 2.3 """
-        init_methods = ["optimistic", "realistic"]
+        init_methods = [["optimistic", 1.0], ["realistic"]]
         ε_list = [0.0, 0.1]
         for i in range(len(init_methods)):
             self.run_bandits(ε_list[i], "sample_average", "ε_greedy", init_methods[i])
@@ -148,8 +151,9 @@ class TenArmedTestbed:
     def test_UCB(self):
         """ section 2.7, figure 2.4 """
         action_selections = [["ε_greedy", 0.1], ["UCB", 2.0]]
+        init_method = ["realistic"]
         for action_selection in action_selections:
-            self.run_bandits("sample_average", action_selection, "realistic")
+            self.run_bandits("sample_average", action_selection, init_method)
             plt.plot(self.R_allRun_ave_np, label=("%s" %action_selection))
             plt.xlabel("steps")
             plt.ylabel("% Optimal action")
