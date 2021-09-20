@@ -8,7 +8,7 @@ import argparse
 class TenArmedTestbed:
     def __init__(self):
         self.num_k = 10 # 10-armed bandits
-        self.num_runs = 20
+        self.num_runs = 1000
         self.T = 1000
 
     def ε_greedy(self, q_estimated, ε):
@@ -100,6 +100,7 @@ class TenArmedTestbed:
                 ifOptimalAction.append(a_optimal == a)
                 
                 # get expected reward
+                # NOTE: this expected reward is the ground truth approximation of the reward bandit received
                 if action_selection[0] == "ε_greedy":
                     expected_r =  (1-ε)*self.q_true[np.argmax(q_estimated)]  + ε*np.mean(self.q_true)
                     expected_R_thisRun.append(expected_r)
@@ -115,7 +116,7 @@ class TenArmedTestbed:
         self.OptimalAction_percentage = (np.sum(np.array(ifOptimalAction_allRun), axis=0)/self.num_runs) * 100 
 
 
-    def test_ε_greedy_sampleAverage(self):
+    def test_ε_greedy(self):
         """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
         init_method = ["realistic"]
@@ -136,7 +137,7 @@ class TenArmedTestbed:
         plt.show()
     
     def test_expectedRewards(self):
-        ε_list = [0, 0.001, 0.01, 0.1, 1.0]
+        ε_list = [0, 0.1, 1.0]
         init_method = ["realistic"]
         for ε in ε_list:
             action_section = ["ε_greedy", ε]
@@ -154,7 +155,7 @@ class TenArmedTestbed:
             plt.legend()
         plt.show()
 
-    def test_incrementalUpdate(self):
+    def compare_incrementalUpdate(self):
         """ section 2.4 """
         update_methods = ["sample_average", "incremental"]
         action_section = ["ε_greedy", 0.1]
@@ -217,9 +218,9 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
-    # TenArmedTestbed().test_ε_greedy_sampleAverage()
+    # TenArmedTestbed().test_ε_greedy()
     TenArmedTestbed().test_expectedRewards()
-    # TenArmedTestbed().test_incrementalUpdate()
+    # TenArmedTestbed().compare_incrementalUpdate()
     # TenArmedTestbed().test_optimisticInitialValues()
     # TenArmedTestbed().test_UCB()
     # TenArmedTestbed().test_gradientBandits()
