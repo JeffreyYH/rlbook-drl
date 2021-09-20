@@ -3,16 +3,13 @@ from matplotlib.pyplot import xlabel
 import numpy as np
 import matplotlib.pylab as plt
 import random
-
+import argparse
 
 class TenArmedTestbed:
     def __init__(self):
         self.num_k = 10 # 10-armed bandits
         self.num_runs = 2000
         self.T = 1000
-        self.method = "sample_average"
-        # self.q_true = np.random.randn(self.num_k)
-        self.q_true = np.random.normal(0, 1, self.num_k)
 
     def ε_greedy(self, q_estimated, ε):
         """ when ε=0, it is greedy """
@@ -35,6 +32,8 @@ class TenArmedTestbed:
         R_allRun = []
         ifOptimalAction_allRun = []
         for run in range(self.num_runs):
+            # self.q_true = np.random.randn(self.num_k)
+            self.q_true = np.random.normal(0, 1, self.num_k)
             # init of estimation Q
             if init_method == "realistic":
                 q_estimated = np.zeros(self.num_k)
@@ -94,16 +93,15 @@ class TenArmedTestbed:
             R_allRun.append(R_thisRun)
             ifOptimalAction_allRun.append(ifOptimalAction)
         # get final average reward, percentage of optimal action
-        R_allRun_np = np.array(R_allRun) 
-        self.R_allRun_ave_np = np.sum(R_allRun_np, axis=0)/self.num_runs  
-        ifOptimalAction_allRun_np = np.array(ifOptimalAction_allRun)  
-        self.OptimalAction_percentage = (np.sum(ifOptimalAction_allRun_np, axis=0)/self.num_runs) * 100 
+        self.R_allRun_ave_np = np.sum(np.array(R_allRun) , axis=0)/self.num_runs  
+        self.OptimalAction_percentage = (np.sum(np.array(ifOptimalAction_allRun), axis=0)/self.num_runs) * 100 
+
 
     def test_ε_greedy_sampleAverage(self):
         """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
         for ε in ε_list:
-            self.run_bandits(ε, "sample_average", "ε_greedy", "realistic")
+            self.run_bandits(ε, "sample_average", "ε_greedy", 0, "realistic")
             # plot fig. 2.2
             plt.subplot(2,1,1)
             plt.plot(self.R_allRun_ave_np, label=("ε = %.2f" %ε))
@@ -164,9 +162,21 @@ class TenArmedTestbed:
                 plt.legend()
         plt.show()
 
+
+def parse_arguments():
+    # Command-line flags are defined here.
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--env_name', dest='env_name', type=str,
+                        default='LunarLander-v2', help="Name of the environment") # CartPole-v0, LunarLander-v2
+    parser.add_argument('--num_episodes', dest='num_episodes', type=int,
+                        default=50000, help="Number of episodes to train on.") #50000
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-#     TenArmedTestbed().test_ε_greedy_sampleAverage()
-#     TenArmedTestbed().test_incrementalUpdate()
-#     TenArmedTestbed().test_optimisticInitialValues()
-#     TenArmedTestbed().test_UCB()
-    TenArmedTestbed().test_gradientBandits()
+    args = parse_arguments()
+    TenArmedTestbed().test_ε_greedy_sampleAverage()
+    # TenArmedTestbed().test_incrementalUpdate()
+    # TenArmedTestbed().test_optimisticInitialValues()
+    # TenArmedTestbed().test_UCB()
+    # TenArmedTestbed().test_gradientBandits()
