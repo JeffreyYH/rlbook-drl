@@ -30,16 +30,13 @@ class TenArmedTestbed:
     
     def Boltzmann_exploration(self, q_estimated, T):
         """T: temperature"""
-        P = np.zeros(self.num_k)
-        sum = 0
+        π = np.zeros(self.num_k)
         for a in range(self.num_k):
-            sum += np.exp(q_estimated[a]*T)
-        for a in range(self.num_k):
-            P[a] = np.exp(q_estimated[a]*T)/sum
-        a = np.random.choice(self.num_k, 1, p=P)[0]
+            π[a] = np.exp(q_estimated[a]*T)/np.sum(np.exp(q_estimated*T))
+        a = np.random.choice(self.num_k, 1, p=π)[0]
         expected_r = 0
         for a in range(self.num_k):
-            expected_r += P[a]*self.q_true[a]
+            expected_r += π[a]*self.q_true[a]
         return a, expected_r
 
     # TODO: fix some numeric issues
