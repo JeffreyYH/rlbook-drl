@@ -100,7 +100,6 @@ class TenArmedTestbed:
         self.OptimalAction_percentage = (np.sum(np.array(ifOptimalAction_allRun), axis=0)/self.num_runs) * 100 
 
 
-    # TODO: buggy implementation of incremental update
     def test_ε_greedy_sampleAverage(self):
         """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
