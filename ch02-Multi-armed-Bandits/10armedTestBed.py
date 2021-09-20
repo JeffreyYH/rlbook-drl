@@ -33,10 +33,8 @@ class TenArmedTestbed:
         π = np.zeros(self.num_k)
         for a in range(self.num_k):
             π[a] = np.exp(q_estimated[a]*T)/np.sum(np.exp(q_estimated*T))
-        a = np.random.choice(self.num_k, 1, p=π)[0]
-        expected_r = 0
-        for a in range(self.num_k):
-            expected_r += π[a]*self.q_true[a]
+        a = np.random.choice(self.num_k, p=π)
+        expected_r = np.dot(self.q_true, π)
         return a, expected_r
 
     # TODO: fix some numeric issues
@@ -194,7 +192,7 @@ class TenArmedTestbed:
             plt.show()
         
         if test_actionSelection_algo == "Boltzmann":
-            T_list = [1, 30, 100]
+            T_list = [1, 3, 10, 30, 100]
             init_method = ["realistic"]
             for T in T_list:
                 action_section = ["Boltzmann", T]
