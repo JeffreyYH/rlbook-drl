@@ -32,7 +32,7 @@ class TenArmedTestbed:
         R_allRun = []
         ifOptimalAction_allRun = []
         for run in range(self.num_runs):
-            # self.q_true = np.random.randn(self.num_k)
+            ## initialization
             self.q_true = np.random.normal(0, 1, self.num_k)
             # init of estimation Q
             if init_method == "realistic":
@@ -47,6 +47,8 @@ class TenArmedTestbed:
             π = [0]*self.num_k
             R_thisRun = []
             ifOptimalAction = []
+
+            ## run T steps
             for t in range(self.T):
                 # get action
                 if action_selection == "ε_greedy":
@@ -60,7 +62,8 @@ class TenArmedTestbed:
                 # get rewards
                 r = np.random.normal(self.q_true[a], 1)
                 R_thisRun.append(r)
-                # some updates for gradient based method
+                N_a[a] += 1
+                ## some updates for gradient based method
                 if action_selection == "gradient_baseline" or action_selection == "gradient_noBaseline":
                     if t <= 1:
                         r_ave = 0
@@ -74,10 +77,9 @@ class TenArmedTestbed:
                     if action_selection == "gradient_noBaseline":
                         H = H - α * r * np.array(π)
                         H[a] = H[a] + α * r * (1 - π[a])
-                # q estimation updating method
+                ## q estimation updating method
                 if update_method == "sample_average":
                     r_sum[a] += r
-                    N_a[a] += 1
                     if N_a[a] == 0:
                         q_estimated[a] = 0
                     else:
@@ -92,16 +94,18 @@ class TenArmedTestbed:
                 ifOptimalAction.append(a_optimal == a)
             R_allRun.append(R_thisRun)
             ifOptimalAction_allRun.append(ifOptimalAction)
-        # get final average reward, percentage of optimal action
+
+        ## get final average reward, percentage of optimal action
         self.R_allRun_ave_np = np.sum(np.array(R_allRun) , axis=0)/self.num_runs  
         self.OptimalAction_percentage = (np.sum(np.array(ifOptimalAction_allRun), axis=0)/self.num_runs) * 100 
 
 
+    # TODO: buggy implementation of incremental update
     def test_ε_greedy_sampleAverage(self):
         """ get the results shown in section 2.3, figure 2.2"""
         ε_list = [0, 0.01, 0.1]
         for ε in ε_list:
-            self.run_bandits(ε, "sample_average", "ε_greedy", 0, "realistic")
+            self.run_bandits(ε, "incremental", "ε_greedy", 0, "realistic")
             # plot fig. 2.2
             plt.subplot(2,1,1)
             plt.plot(self.R_allRun_ave_np, label=("ε = %.2f" %ε))
@@ -120,7 +124,7 @@ class TenArmedTestbed:
         update_methods = ["sample_average", "incremental"]
         for update_method in update_methods:
             begin_time = time.time()
-            self.run_bandits(0.1, update_method, "ε_greedy", "realistic")
+            self.run_bandits(0.1, update_method, "ε_greedy", 0, "realistic")
             end_time = time.time()
             time_used = end_time - begin_time
             print("Running time of update method %s is %f" %(update_method, time_used))
