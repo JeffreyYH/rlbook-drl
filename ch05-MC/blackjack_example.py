@@ -2,7 +2,7 @@ import sys
 import gym
 if "../" not in sys.path: sys.path.append("../")
 
-env = gym.make("Blackjack-v0")
+env = gym.make("Blackjack-v1")
 
 def print_observation(observation):
     score, dealer_score, usable_ace = observation
