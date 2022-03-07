@@ -18,6 +18,7 @@ def handcrafted_episode():
     return [((7, 5, False), 1, 0), ((9, 5, False), 1, 1.0), ((13, 5, False), 1, 0), \
             ((7, 5, False), 1, 1.0), ((18, 5, False), 1, 1.0), ((21, 5, False), 0, 1.0)]
 
+
 # sample policy: Stick (action 0) if the score is 20 or 21, hit (action 1) otherwise
 def policy(observation):
     score, dealer_score, usable_ace = observation
@@ -25,6 +26,7 @@ def policy(observation):
         return 0
     else:
         return 1
+
 
 def generate_episode(policy, num_steps):
     """each element in the episode is a [state, action, reward] tuple
@@ -41,6 +43,7 @@ def generate_episode(policy, num_steps):
         else:
             curr_state = next_state
     return episode
+
 
 def first_visit_MC_prediction(num_episodes, num_steps, discount_factor=1.0):
     # returns for state s (could be multiple returns in one state), value function
@@ -74,6 +77,20 @@ def first_visit_MC_prediction(num_episodes, num_steps, discount_factor=1.0):
             V[s] = np.mean(returns[s])
     return V
 
+
+def MC_ES(um_episodes=100, num_steps=100, epislon=0.01):
+    pass
+
+
+def OnPolicy_first_visit_MC_control(num_episodes=100, num_steps=100, epislon=0.01):
+    for i_episode in range(num_episodes):
+        episode = generate_episode(policy, num_steps)
+        G = 0
+        # for t in T:
+
+
+
+
 def plot_value_function(V, title="Value Function"):
     """
     Plots the value function as a surface plot.
@@ -106,6 +123,7 @@ def plot_value_function(V, title="Value Function"):
 
     plot_surface(X, Y, Z_noace, "{} (No Usable Ace)".format(title))
     plot_surface(X, Y, Z_ace, "{} (Usable Ace)".format(title))
+
 
 if __name__ == "__main__":
     env = gym.make("Blackjack-v1")
