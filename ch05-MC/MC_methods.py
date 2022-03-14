@@ -156,7 +156,15 @@ class Tabular_MC:
 
 
     def offPolicy_MC_prediction(self):
-        pass
+        """ off-policy prediction via importance sampling"""
+        Q = np.zeros((self.env.nS, self.env.nA))
+        policy_FVMCC = np.zeros(self.env.nS, dtype=int)
+        for i in range(self.env.nS):
+            policy_FVMCC[i] = np.random.choice(self.env.nA)
+        C = np.zeros((self.env.nS, self.env.nA))
+
+        for i_episode in tqdm(range(self.num_episodes)):
+            pass
     
 
     def offPolicy_MC_control(self):
