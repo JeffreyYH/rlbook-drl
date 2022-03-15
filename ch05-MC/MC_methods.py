@@ -13,7 +13,7 @@ from blackjack_example import plot_value_function, handcrafted_episode
 class Tabular_MC:
     def __init__(self, args):
         self.env = args.env
-        self.num_episodes=10000
+        self.num_episodes=50000
         self.max_steps=1000
         self.epislon=0.1
         self.gamma = 1.0
@@ -33,7 +33,7 @@ class Tabular_MC:
             if step == 0 and use_ES:
                 action = np.random.choice(self.env.nA)
             else:
-                action = policy[curr_state]
+                action = np.argmax(policy[curr_state])
             next_state, reward, done, _ = self.env.step(action)
             episode.append((curr_state, action, reward))
             if done:
@@ -78,10 +78,18 @@ class Tabular_MC:
 
     def init_policy(self):
         """ initialize policy with random action for each state"""
-        policy = np.zeros(self.env.nS, dtype=int)
-        for i in range(self.env.nS):
-            policy[i] = np.random.choice(self.env.nA)
+        policy = np.zeros([self.env.nS, self.env.nA], dtype=int)
+        # for s in range(self.env.nS):
+        #     a = np.random.choice(self.env.nA)
+        #     policy[s, :] = self.action_to_onehot(a) 
         return policy
+
+
+    def action_to_onehot(self, a):
+        """ convert single action to onehot vector"""
+        a_onehot = np.zeros(self.env.nA)
+        a_onehot[a] = 1
+        return a_onehot
 
 
     def MC_ES(self):
@@ -110,7 +118,8 @@ class Tabular_MC:
                     continue
                 Returns[s_t][a_t].append(G)
                 Q[s_t][a_t] = np.mean(np.array(Returns[s_t][a_t]))
-                policy_MCES[s_t] = np.argmax(Q[s_t, :])
+                a_optimal = np.argmax(Q[s_t, :])
+                policy_MCES[s_t, :] = self.action_to_onehot(a_optimal)
                 visited_SA.append([s_t, a_t])
         print(Q)
         return policy_MCES
@@ -153,10 +162,11 @@ class Tabular_MC:
                 # if [s_t, a_t] in SA_pairs:
                 Returns[s_t][a_t].append(G)
                 Q[s_t][a_t] = np.mean(np.array(Returns[s_t][a_t]))
-                policy_FVMCC[s_t] = self.epsilon_greedy_policy(Q[s_t, :], self.epislon)
+                a_optimal = self.epsilon_greedy_policy(Q[s_t, :], self.epislon)
+                policy_FVMCC[s_t, :] = self.action_to_onehot(a_optimal)
                 visited_SA.append([s_t, a_t])
         print(Q)
-        # print(policy_FVMCC)
+        print(policy_FVMCC)
 
 
     def offPolicy_MC_prediction(self):
@@ -190,7 +200,7 @@ if __name__ == "__main__":
 
     MC_agent = Tabular_MC(args)
 
-    MC_agent.MC_ES()
+    # MC_agent.MC_ES()
     MC_agent.OnPolicy_first_visit_MC_control()
 
     if args.env_name == "Blackjack-v1":
