@@ -10,16 +10,11 @@ from lib.envs.gridworld import GridworldEnv
 class Tabular_DP:
     def __init__(self, args):
         self.env = args.env
-        self.num_episodes=10000
-        self.max_steps=1000
         self.discount_factor = 1.0
         self.theta = 1e-5
     
 
     def policy_eval (self, policy):
-        """
-        policy evaluation given policy and transition model P
-        """
         # initialize value function V, for each state s, V(s) = 0
         V = np.zeros(self.env.nS)
         # print(V)
