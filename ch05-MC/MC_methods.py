@@ -76,6 +76,14 @@ class Tabular_MC:
         return V
 
 
+    def init_policy(self):
+        """ initialize policy with random action for each state"""
+        policy = np.zeros(self.env.nS, dtype=int)
+        for i in range(self.env.nS):
+            policy[i] = np.random.choice(self.env.nA)
+        return policy
+
+
     def MC_ES(self):
         """ Monte Carlo ES (Exploring Starts) """
         Returns = {}
@@ -85,9 +93,7 @@ class Tabular_MC:
                 Returns[s][a] = []
         Q = np.zeros((self.env.nS, self.env.nA))
         # here we use deterministic policy 
-        policy_MCES = np.zeros(self.env.nS, dtype=int)
-        for i in range(self.env.nS):
-            policy_MCES[i] = np.random.choice(self.env.nA)
+        policy_MCES = self.init_policy()
 
         for i_episode in tqdm(range(self.num_episodes)):
             # generate s_0, a_0 to fulfil exploring start assumption
@@ -129,9 +135,7 @@ class Tabular_MC:
             for a in range(self.env.nA):
                 Returns[s][a] = []
         Q = np.zeros((self.env.nS, self.env.nA))
-        policy_FVMCC = np.zeros(self.env.nS, dtype=int)
-        for i in range(self.env.nS):
-            policy_FVMCC[i] = np.random.choice(self.env.nA)
+        policy_FVMCC = self.init_policy()
 
         for i_episode in tqdm(range(self.num_episodes)):
             episode = self.generate_episode(policy_FVMCC, False)
@@ -158,17 +162,18 @@ class Tabular_MC:
     def offPolicy_MC_prediction(self):
         """ off-policy prediction via importance sampling"""
         Q = np.zeros((self.env.nS, self.env.nA))
-        policy_FVMCC = np.zeros(self.env.nS, dtype=int)
-        for i in range(self.env.nS):
-            policy_FVMCC[i] = np.random.choice(self.env.nA)
         C = np.zeros((self.env.nS, self.env.nA))
-
         for i_episode in tqdm(range(self.num_episodes)):
             pass
     
 
     def offPolicy_MC_control(self):
-        pass
+        """ off-policy MC control via importance sampling"""
+        Q = np.zeros((self.env.nS, self.env.nA))
+        C = np.zeros((self.env.nS, self.env.nA))
+        policy_OffPMCC = self.init_policy()
+        for i_episode in tqdm(range(self.num_episodes)):
+            pass
 
 
 def parse_arguments():
