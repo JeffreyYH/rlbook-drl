@@ -8,12 +8,14 @@ from tqdm import tqdm
 import argparse
 from collections import namedtuple
 from blackjack_example import plot_value_function, handcrafted_episode
+if "../" not in sys.path: sys.path.append("../")
+from lib.envs.gridworld import GridworldEnv
 
 
 class Tabular_MC:
     def __init__(self, args):
         self.env = args.env
-        self.num_episodes=50000
+        self.num_episodes=10000
         self.max_steps=1000
         self.epislon=0.1
         self.gamma = 1.0
@@ -189,14 +191,19 @@ class Tabular_MC:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
-                        choices=["Blackjack-v1", "FrozenLake-v1"])
+                        # default="FrozenLake-v1", 
+                        default="gridworld", 
+                        choices=["Blackjack-v1", "gridworld", "FrozenLake-v1"])
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
-    args.env = gym.make(args.env_name)
+    args = parse_arguments()
+    if args.env_name == "gridworld":
+        args.env = GridworldEnv() 
+    else:
+        args.env = gym.make(args.env_name)
 
     MC_agent = Tabular_MC(args)
 

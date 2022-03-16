@@ -5,7 +5,7 @@ from tqdm import tqdm
 import argparse
 if "../" not in sys.path: sys.path.append("../")
 from lib.envs.gridworld import GridworldEnv
-
+import lib.envs.lake_envs as lake_env
 
 class Tabular_DP:
     def __init__(self, args):
@@ -31,7 +31,6 @@ class Tabular_DP:
                     # for each possible NEXT state taking action a at current state s
                     for P_trans, s_next, reward, is_done in self.env.P[s][a]:
                         V_s += P_a * P_trans * (reward + self.discount_factor * V[s_next])
-
                 V[s] = V_s
 
                 # see if the value function converge
@@ -55,7 +54,8 @@ class Tabular_DP:
 
     def policy_iter(self):
         # initialize the policy
-        policy = np.ones([self.env.nS, self.env.nA]) / self.env.nA
+        # policy = np.ones([self.env.nS, self.env.nA]) / self.env.nA
+        policy = np.zeros([self.env.nS, self.env.nA])
 
         while True:
             policy_stable = True
@@ -74,6 +74,8 @@ class Tabular_DP:
 
                 if old_a != best_a:
                     policy_stable = False
+
+            print (V)
 
             if policy_stable:
                 return V, policy
@@ -113,14 +115,19 @@ class Tabular_DP:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
-                        choices=["gridworld", "FrozenLake-v1"])
+                        # default="FrozenLake-v1", 
+                        # default="Deterministic-4x4-FrozenLake-v0", 
+                        default="gridworld", 
+                        choices=["gridworld", "FrozenLake-v1", 'Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0'])
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
-    args.env = gym.make(args.env_name)
+    if args.env_name == "gridworld":
+        args.env = GridworldEnv() 
+    else:
+        args.env = gym.make(args.env_name)
     dp = Tabular_DP(args)
 
     # test policy iteration
