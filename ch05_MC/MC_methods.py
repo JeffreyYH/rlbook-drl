@@ -9,16 +9,18 @@ import argparse
 from collections import namedtuple
 from blackjack_example import plot_value_function, handcrafted_episode
 if "../" not in sys.path: sys.path.append("../")
+from lib.common_utils import TabularUtils
 from lib.envs.gridworld import GridworldEnv
 
 
 class Tabular_MC:
     def __init__(self, args):
         self.env = args.env
-        self.num_episodes=10000
-        self.max_steps=1000
-        self.epislon=0.1
+        self.num_episodes = 10000
+        self.max_steps = 1000
+        self.epislon = 0.2
         self.gamma = 1.0
+        self.tabularUtils = TabularUtils(self.env)
 
 
     def generate_episode(self, policy, use_ES):
@@ -88,13 +90,6 @@ class Tabular_MC:
         return policy
 
 
-    def action_to_onehot(self, a):
-        """ convert single action to onehot vector"""
-        a_onehot = np.zeros(self.env.nA)
-        a_onehot[a] = 1
-        return a_onehot
-
-
     def MC_ES(self):
         """ Monte Carlo ES (Exploring Starts) """
         Returns = {}
@@ -122,21 +117,10 @@ class Tabular_MC:
                 Returns[s_t][a_t].append(G)
                 Q[s_t][a_t] = np.mean(np.array(Returns[s_t][a_t]))
                 a_optimal = np.argmax(Q[s_t, :])
-                policy_MCES[s_t, :] = self.action_to_onehot(a_optimal)
+                policy_MCES[s_t, :] = self.tabularUtils.action_to_onehot(a_optimal)
                 visited_SA.append([s_t, a_t])
         print(Q)
         return policy_MCES
-
-    
-    def epsilon_greedy_policy(self, q_values, ε=0.05):
-        """ Creating epsilon greedy probabilities to sample from """
-        """ when ε=0, it is greedy """
-        p = np.random.uniform(0, 1)
-        if (p < ε):
-            a = np.random.choice(len(q_values))
-        else:
-            a = np.argmax(np.array(q_values))
-        return a
 
 
     def OnPolicy_first_visit_MC_control(self):
@@ -165,8 +149,8 @@ class Tabular_MC:
                 # if [s_t, a_t] in SA_pairs:
                 Returns[s_t][a_t].append(G)
                 Q[s_t][a_t] = np.mean(np.array(Returns[s_t][a_t]))
-                a_optimal = self.epsilon_greedy_policy(Q[s_t, :], self.epislon)
-                policy_FVMCC[s_t, :] = self.action_to_onehot(a_optimal)
+                a_optimal = self.tabularUtils.epsilon_greedy_policy(Q[s_t, :], self.epislon)
+                policy_FVMCC[s_t, :] = self.tabularUtils.action_to_onehot(a_optimal)
                 visited_SA.append([s_t, a_t])
         print(Q)
         print(policy_FVMCC)
