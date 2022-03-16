@@ -7,6 +7,7 @@ if "../" not in sys.path: sys.path.append("../")
 from lib.envs.gridworld import GridworldEnv
 import lib.envs.lake_envs as lake_env
 
+
 class Tabular_DP:
     def __init__(self, args):
         self.env = args.env
@@ -57,16 +58,13 @@ class Tabular_DP:
         policy_new = policy
         for s in range(self.env.nS):
             # action from the policy before policy improvement
-            # old_a = policy[s]
             old_a = np.argmax(policy[s])
             # compute action-value function q(s,a) by one step of lookahead
             q_s = self.compute_q_value_cur_state(s, value_func)
             # choose the best action and greedily improve the policy
-            # policy_new[s] = np.argmax(q_s)
             best_a = np.argmax(q_s)
             policy_new[s, :] = np.eye(self.env.nA)[best_a, :]
 
-            # if old_a != policy_new[s]:
             if old_a != best_a:
                 policy_stable = False
 
@@ -74,8 +72,7 @@ class Tabular_DP:
 
 
     def policy_iteration(self):
-        # policy = np.zeros(env.nS, dtype='int')
-        policy = np.zeros([self.env.nS, self.env.nA], dtype='int')
+        policy = np.zeros([self.env.nS, self.env.nA])
         value_func = np.zeros(self.env.nS)
 
         # iteratively evaluate the policy and improve the policy
@@ -87,28 +84,29 @@ class Tabular_DP:
 
             total_num_policy_eval += num_policy_eval
             if policy_stable:
-                # return policy, value_func, num_policy_iter, total_num_policy_eval
+                print("num of policy iteration:%d and policy evaluation: %d" %(num_policy_iter, total_num_policy_eval))
                 return value_func, policy
         
 
     def value_iteration(self):
         # initialize the value function
         value_func = np.zeros(self.env.nS)
-        while True:
+        for n_iter in range(1, self.max_iterations+1):
             Delta = 0
             for s in range(self.env.nS):
-                v = value_func[s]
+                pre_v_s = value_func[s]
                 # we have to compute q[s] in each iteration from scratch
                 # and compare it with the q value in previous iteration
                 q_s = self.compute_q_value_cur_state(s, value_func)
 
                 # choose the optimal action and optimal value function in current state
                 value_func[s] = max(q_s)
-                Delta = max(Delta, np.abs(value_func[s] - v))
+                Delta = max(Delta, np.abs(value_func[s] - pre_v_s))
 
             if Delta < self.theta:
                 break
-
+        
+        print("num of iteration is: %d" %n_iter)
         V_optimal = value_func
 
         # output the deterministic policy with optimal value function
@@ -117,7 +115,7 @@ class Tabular_DP:
             q_s = self.compute_q_value_cur_state(s, V_optimal)
             # choose optimal action
             a_optimal = np.argmax(q_s)
-            policy_optimal[s, a_optimal] = 1
+            policy_optimal[s, a_optimal] = 1.0
 
         return V_optimal, policy_optimal
 
@@ -141,15 +139,18 @@ if __name__ == "__main__":
     dp = Tabular_DP(args)
 
     # test policy iteration
+    print("================Running policy iteration=====================")
     V_optimal, policy_optimal = dp.policy_iteration()
     print("Optimal value function: ")
-    print(V_optimal.reshape([4, 4]))
+    print(V_optimal)
     print("Optimal policy: ")
     print(policy_optimal)
+    print("\n")
 
     # test value iteration
+    print("================Running value iteration=====================")
     V_optimal, policy_optimal = dp.value_iteration()
     print("Optimal value function: ")
-    print(V_optimal.reshape([4, 4]))
+    print(V_optimal)
     print("Optimal policy: ")
     print(policy_optimal)
