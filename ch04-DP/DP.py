@@ -26,6 +26,13 @@ class Tabular_DP:
             q_s[a] = curr_q
         return q_s
 
+
+    def action_to_onehot(self, a):
+        """ convert single action to onehot vector"""
+        a_onehot = np.zeros(self.env.nA)
+        a_onehot[a] = 1
+        return a_onehot
+
     
     def policy_evaluation(self, value_func, policy):
         n_iter = 0
@@ -63,7 +70,7 @@ class Tabular_DP:
             q_s = self.compute_q_value_cur_state(s, value_func)
             # choose the best action and greedily improve the policy
             best_a = np.argmax(q_s)
-            policy_new[s, :] = np.eye(self.env.nA)[best_a, :]
+            policy_new[s, :] = self.action_to_onehot(best_a)
 
             if old_a != best_a:
                 policy_stable = False
@@ -123,8 +130,8 @@ class Tabular_DP:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        # default="FrozenLake-v1", 
-                        default="Deterministic-4x4-FrozenLake-v0", 
+                        default="FrozenLake-v1", 
+                        # default="Deterministic-4x4-FrozenLake-v0", 
                         # default="gridworld", 
                         choices=["gridworld", "FrozenLake-v1", 'Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0'])
     return parser.parse_args()

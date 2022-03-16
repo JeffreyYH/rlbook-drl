@@ -20,6 +20,7 @@ class Tabular_MC:
         self.epislon=0.1
         self.gamma = 1.0
 
+
     def generate_episode(self, policy, use_ES):
         """ each element in the episode is a [state, action, reward] tuple
         inputs: 
@@ -80,7 +81,7 @@ class Tabular_MC:
 
     def init_policy(self):
         """ initialize policy with random action for each state"""
-        policy = np.zeros([self.env.nS, self.env.nA], dtype=int)
+        policy = np.zeros([self.env.nS, self.env.nA])
         # for s in range(self.env.nS):
         #     a = np.random.choice(self.env.nA)
         #     policy[s, :] = self.action_to_onehot(a) 
@@ -191,8 +192,8 @@ class Tabular_MC:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        # default="FrozenLake-v1", 
-                        default="gridworld", 
+                        default="FrozenLake-v1", 
+                        # default="gridworld", 
                         choices=["Blackjack-v1", "gridworld", "FrozenLake-v1"])
     return parser.parse_args()
 
