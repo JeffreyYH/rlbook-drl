@@ -51,8 +51,12 @@ class Tabular_TD:
         
     
     def Q_learning(self):
-        """ Q learning: off-policy TD control"""
-        # TODO: why is this off-policy
+        """ 
+        Q learning: off-policy TD control
+        we use the same Q to represent two different policy
+        1. the behavior policy: epsilon-greedy
+        2. the target policy: greedy, which is used to update the Q function
+        """
         Q = np.zeros((self.env.nS, self.env.nA))
         for epi in range(self.num_episodes):
             done = False
