@@ -13,15 +13,22 @@ from ch04_DP.DP import Tabular_DP
 class Tabular_Planning_Learning:
     def __init__(self, args):
         self.env = args.env
-        self.num_episodes=100
+        self.num_episodes=1000
         self.gamma = 1.0
         self.alpha = 0.05
         self.tabularUtils = TabularUtils(self.env)
         self.num_iter_model = 1000
 
+
     def Dyna_Q(self):
         Q = np.zeros((self.env.nS, self.env.nA))
+        # initialize model
         model = {}
+        for s in range(self.env.nS):
+            for a in range(self.env.nA):
+                s_next = np.random.choice(self.env.nS)
+                r = np.random.choice(self.env.reward_range)
+                model[(s,a)] = (r, s_next)
         states_list = []
         actions_list = []
         for epi in range(self.num_episodes):
@@ -34,6 +41,7 @@ class Tabular_Planning_Learning:
                 model[(s, a)] = (r, s_next)
                 states_list.append(s)
                 actions_list.append(a)
+                s = s_next
                 for i in range(self.num_iter_model):
                     s_tr = random.sample(states_list, 1)[0]
                     a_tr = random.sample(actions_list, 1)[0]
@@ -41,8 +49,8 @@ class Tabular_Planning_Learning:
                     Q[s_tr][a_tr] = Q[s_tr][a_tr] + self.alpha * (r_tr + self.gamma * np.max(Q[s_next_tr, :]) - Q[s_tr][a_tr])
 
         greedy_policy = self.tabularUtils.Q_value_to_greedy_policy(Q)
-
         print(greedy_policy)
+        return Q, greedy_policy
 
 
 def parse_arguments():
@@ -56,7 +64,14 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
     args.env = gym.make(args.env_name)
+    
+    dp = Tabular_DP(args)
+    V_optimal_VI, policy_optimal = dp.value_iteration()
+    print(policy_optimal)
+
     planning_learning = Tabular_Planning_Learning(args)
-    planning_learning.Dyna_Q()
+    Q_dyna, policy_dyna = planning_learning.Dyna_Q()
+
+    print(policy_optimal - policy_dyna)
 
 
