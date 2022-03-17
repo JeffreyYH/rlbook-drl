@@ -50,6 +50,7 @@ class Tabular_MC:
 
     def first_visit_MC_prediction(self):
         # returns for state s (could be multiple returns in one state), value function
+        # TODO: evaluate on frozen lake env
         returns = defaultdict(list)
         V = defaultdict(float)
 
@@ -92,6 +93,7 @@ class Tabular_MC:
 
     def MC_ES(self):
         """ Monte Carlo ES (Exploring Starts) """
+        # TODO: does not work so well
         Returns = {}
         for s in range(self.env.nS):
             Returns[s] = {}
@@ -125,6 +127,7 @@ class Tabular_MC:
 
     def OnPolicy_first_visit_MC_control(self):
         """ On-policy first-visit MC control """
+        # TODO: does not work so well
         Returns = {}
         for s in range(self.env.nS):
             Returns[s] = {}
