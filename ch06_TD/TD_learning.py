@@ -52,7 +52,40 @@ class Tabular_TD:
     
     def Q_learning(self):
         """ Q learning: off-policy TD control"""
-        pass
+        # TODO: why is this off-policy
+        Q = np.zeros((self.env.nS, self.env.nA))
+        for epi in range(self.num_episodes):
+            done = False
+            s = self.env.reset()
+            while not done:
+                a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
+                s_next, r, done, _ = self.env.step(a)
+                Q[s][a] = Q[s][a] + self.alpha * (r + self.gamma * np.max(Q[s_next, :]) - Q[s][a])
+                s = s_next
+        
+        greedy_policy = self.tabularUtils.Q_value_to_greedy_policy(Q)
+
+        return Q, greedy_policy
+    
+
+    def double_Q_learning(self):
+        Q1 = np.zeros((self.env.nS, self.env.nA))
+        Q2 = np.zeros((self.env.nS, self.env.nA))
+        for epi in range(self.num_episodes):
+            done = False
+            s = self.env.reset()
+            while not done:
+                a = self.tabularUtils.epsilon_greedy_policy(Q1[s, :]+Q2[s, :]) 
+                s_next, r, done, _ = self.env.step(a)
+                Q1[s][a] = Q1[s][a] + self.alpha * (r + self.gamma * Q2[s_next, np.argmax(Q1[s_next, :])] - Q1[s][a])
+                Q2[s][a] = Q2[s][a] + self.alpha * (r + self.gamma * Q1[s_next, np.argmax(Q2[s_next, :])] - Q2[s][a])
+                s = s_next
+        
+        Q_final = (Q1+Q2)/2
+        greedy_policy = self.tabularUtils.Q_value_to_greedy_policy(Q_final)
+
+        return Q_final, greedy_policy
+
 
 
 def parse_arguments():
@@ -78,3 +111,9 @@ if __name__ == "__main__":
 
     Q_sarsa, policy_sarsa = td.sarsa()
     print(policy_sarsa)
+
+    Q_qlearing, policy_qlearing = td.Q_learning()
+    print(policy_qlearing)
+
+    Q_dbQlearing, policy_dbQlearing = td.double_Q_learning()
+    print(policy_dbQlearing)
