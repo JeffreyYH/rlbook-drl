@@ -29,7 +29,7 @@ class TabularUtils:
             policy[s] = np.argmax(policy_onehot[s, :])
         
         return policy
-
+    
 
     def Q_value_to_greedy_policy(self, Q):
         """ get greedy policy from Q value"""

@@ -157,8 +157,9 @@ class Tabular_MC:
                 a_optimal = self.tabularUtils.epsilon_greedy_policy(Q[s_t, :], self.epislon)
                 policy_FVMCC[s_t, :] = self.tabularUtils.action_to_onehot(a_optimal)
                 visited_SA.append([s_t, a_t])
-        print(Q)
-        print(policy_FVMCC)
+        # print(Q)
+        # print(policy_FVMCC)
+        return policy_FVMCC
 
 
     def offPolicy_MC_prediction(self):
@@ -195,10 +196,11 @@ if __name__ == "__main__":
     else:
         args.env = gym.make(args.env_name)
 
+    tabular_utils = TabularUtils(args.env)
     dp = Tabular_DP(args)
     V_optimal_VI, policy_optimal = dp.value_iteration()
     print(V_optimal_VI)
-    # print(policy_optimal)
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_optimal))
 
     MC_agent = Tabular_MC(args)
     V_MC = MC_agent.first_visit_MC_prediction(policy_optimal)
@@ -206,10 +208,11 @@ if __name__ == "__main__":
     for key, value in V_MC.items():
         V_MC_np[key] = value
     print(V_MC_np)
-    print("mean abs error of MC prediction: %5f" %np.mean(np.abs(V_MC_np - V_optimal_VI)))
+    print("mean abs error of first visit MC prediction: %5f" %np.mean(np.abs(V_MC_np - V_optimal_VI)))
 
     # MC_agent.MC_ES()
-    # MC_agent.OnPolicy_first_visit_MC_control()
+    policy_FVMCC = MC_agent.OnPolicy_first_visit_MC_control()
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_FVMCC))
 
 
     if args.env_name == "Blackjack-v1":
