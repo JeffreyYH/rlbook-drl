@@ -53,6 +53,12 @@ class Tabular_Planning_Learning:
         return Q, greedy_policy
 
 
+    def MCTS(self):
+        """ monte-carlo tree search"""
+        pass
+
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,

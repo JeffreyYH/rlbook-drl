@@ -15,12 +15,11 @@ class Tabular_nStepTD:
         self.num_episodes=10000
         self.gamma = 1.0
         self.alpha = 0.05
-        self.n = 5
         self.tabularUtils = TabularUtils(self.env)
     
     def nStepTD_prediction(self, policy, n):
         V_est = np.zeros(self.env.nS)
-        for epi in range(self.num_episode):
+        for epi in range(self.num_episodes):
             done = False
             t = 0
             s = self.env.reset()
@@ -31,7 +30,7 @@ class Tabular_nStepTD:
             R.append(0)
             while True:
                 if t < T:
-                    a = policy[s]
+                    a = np.argmax(policy[s])
                     s_next, r, done, _ = self.env.step(a)
                     S.append(s_next)
                     R.append(r)
@@ -57,4 +56,32 @@ class Tabular_nStepTD:
 
         return V_est
 
-    
+
+    # TODO: the rest algorithm will be implemented later
+    def nStep_sarsa(self):
+        pass
+
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--env_name', dest='env_name', type=str,
+                        default="FrozenLake-v1", 
+                        choices=["gridworld", "FrozenLake-v1"])
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    args.env = gym.make(args.env_name)
+
+    dp = Tabular_DP(args)
+    V_optimal_VI, policy_optimal = dp.value_iteration()
+    print(V_optimal_VI)
+    print(policy_optimal)
+
+    nstep_td = Tabular_nStepTD(args)
+    V_est_nstepTD = nstep_td.nStepTD_prediction(policy_optimal, 5)
+    print(V_est_nstepTD)
+
+    print("mean abs error of n-step TD prediction: %5f" %np.mean(np.abs(V_est_nstepTD - V_optimal_VI)))

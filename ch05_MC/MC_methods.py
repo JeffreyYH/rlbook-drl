@@ -10,6 +10,7 @@ from collections import namedtuple
 from blackjack_example import plot_value_function, handcrafted_episode
 if "../" not in sys.path: sys.path.append("../")
 from lib.common_utils import TabularUtils
+from ch04_DP.DP import Tabular_DP
 from lib.envs.gridworld import GridworldEnv
 
 
@@ -48,17 +49,16 @@ class Tabular_MC:
         return episode
     
 
-    def first_visit_MC_prediction(self):
+    def first_visit_MC_prediction(self, policy):
         # returns for state s (could be multiple returns in one state), value function
-        # TODO: evaluate on frozen lake env
         returns = defaultdict(list)
         V = defaultdict(float)
 
         # generate episodes with the policy
         for i_episode in range(self.num_episodes):
             # generate one spisode
-            # episode = generate_episode(policy)
-            episode = handcrafted_episode()
+            episode = self.generate_episode(policy, False)
+            # episode = handcrafted_episode()
 
             # for each state in this episode
             states_in_episode = [ep[0] for ep in episode]
@@ -79,6 +79,8 @@ class Tabular_MC:
                 returns[s].append(G)
                 # average all the returns in state s
                 V[s] = np.mean(returns[s])
+
+        # V = sorted(V.items())
         return V
 
 
@@ -193,10 +195,22 @@ if __name__ == "__main__":
     else:
         args.env = gym.make(args.env_name)
 
+    dp = Tabular_DP(args)
+    V_optimal_VI, policy_optimal = dp.value_iteration()
+    print(V_optimal_VI)
+    # print(policy_optimal)
+
     MC_agent = Tabular_MC(args)
+    V_MC = MC_agent.first_visit_MC_prediction(policy_optimal)
+    V_MC_np = np.zeros(args.env.nS)
+    for key, value in V_MC.items():
+        V_MC_np[key] = value
+    print(V_MC_np)
+    print("mean abs error of MC prediction: %5f" %np.mean(np.abs(V_MC_np - V_optimal_VI)))
 
     # MC_agent.MC_ES()
-    MC_agent.OnPolicy_first_visit_MC_control()
+    # MC_agent.OnPolicy_first_visit_MC_control()
+
 
     if args.env_name == "Blackjack-v1":
         V_10k = MC_agent.first_visit_MC_prediction(num_episodes=10000, max_steps=100)

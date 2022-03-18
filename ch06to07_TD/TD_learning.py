@@ -112,6 +112,7 @@ if __name__ == "__main__":
     td = Tabular_TD(args)
     V_est_TD0 = td.TD0_prediction(policy_optimal)
     print(V_est_TD0)
+    print("mean abs error of TD(0)prediction: %5f" %np.mean(np.abs(V_est_TD0 - V_optimal_VI)))
 
     Q_sarsa, policy_sarsa = td.sarsa()
     print(policy_sarsa)
