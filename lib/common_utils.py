@@ -5,14 +5,17 @@ class TabularUtils:
         self.env = env
 
 
-    def epsilon_greedy_policy(self, q_values, ε=0.2):
-        """ Creating epsilon greedy probabilities to sample from """
-        """ when ε=0, it is greedy """
+    def epsilon_greedy_policy(self, policy_s_or_Q_s, ε=0.2):
+        """ 
+        Creating epsilon greedy probabilities to sample from
+        inputs: policy_s_or_Q_s, policy or q value at state s
+        when ε=0, it is greedy 
+        """
         p = np.random.uniform(0, 1)
         if (p < ε):
-            a = np.random.choice(len(q_values))
+            a = np.random.choice(len(policy_s_or_Q_s))
         else:
-            a = np.argmax(np.array(q_values))
+            a = np.argmax(np.array(policy_s_or_Q_s))
         return a
     
 
@@ -39,3 +42,12 @@ class TabularUtils:
             policy[s, :] = self.action_to_onehot(a_greedy)
         
         return policy
+    
+    
+    def Q_value_to_state_value(self, Q, policy):
+        """ compute the state value function given action value function"""
+        V = np.zeros(self.env.nS)
+        for s in range(self.env.nS):
+            V[s] = np.dot(Q[s, :], policy[s, :])
+        
+        return V
