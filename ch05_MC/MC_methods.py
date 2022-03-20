@@ -165,21 +165,30 @@ class Tabular_MC:
         return Q, policy
 
 
-    def offPolicy_MC_prediction(self):
-        """ off-policy prediction via importance sampling"""
-        Q = np.zeros((self.env.nS, self.env.nA))
-        C = np.zeros((self.env.nS, self.env.nA))
-        for i_episode in tqdm(range(self.num_episodes)):
-            pass
-    
-
     def offPolicy_MC_control(self):
         """ off-policy MC control via importance sampling"""
         Q = np.zeros((self.env.nS, self.env.nA))
         C = np.zeros((self.env.nS, self.env.nA))
-        policy_OffPMCC = self.init_policy()
+        pi = self.init_policy()
         for i_episode in tqdm(range(self.num_episodes)):
-            pass
+            b = pi
+            episode = self.generate_episode(b, False)
+            G = 0.0
+            W = 1.0
+            T = len(episode)
+            for t in reversed(range(T)): 
+                s_t = episode[t][0]
+                a_t = episode[t][1]
+                r_t = episode[t][2]
+                G = self.gamma * G + r_t
+                C[s_t, a_t] += W
+                Q[s_t, a_t] += (W/C[s_t, a_t]) * (G - Q[s_t, a_t])
+                pi[s_t, :] = self.tabularUtils.action_to_onehot(np.argmax(Q[s_t, :]))
+                if a_t != np.argmax(pi[s_t,:]):
+                    continue
+                W = W/b[s_t, a_t]
+        
+        return Q, pi
 
 
 def parse_arguments():
@@ -202,8 +211,10 @@ if __name__ == "__main__":
     tabular_utils = TabularUtils(args.env)
     dp = Tabular_DP(args)
     V_optimal_VI, policy_optimal = dp.value_iteration()
+    print("ground truth value function and policy by VI:")
     print(V_optimal_VI)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_optimal))
+    print("\n")
 
     # testing first-visit MC prediction
     MC_agent = Tabular_MC(args)
@@ -212,21 +223,28 @@ if __name__ == "__main__":
     for key, value in V_MC.items():
         V_MC_np[key] = value
     print(V_MC_np)
-    print("mean abs error of first visit MC prediction: %5f" %np.mean(np.abs(V_MC_np - V_optimal_VI)))
+    print("mean abs error of first visit MC prediction: %5f \n" %np.mean(np.abs(V_MC_np - V_optimal_VI)))
 
     # testing MC exploring start
     Q_MCES, policy_MCES = MC_agent.MC_ES()
     V_MCES = tabular_utils.Q_value_to_state_value(Q_MCES, policy_MCES)
     print(V_MCES)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_MCES))
-    print("mean abs error of value function by MC exploring start: %5f" %np.mean(np.abs(V_MCES - V_optimal_VI)))
+    print("mean abs error of value function by MC exploring start: %5f \n" %np.mean(np.abs(V_MCES - V_optimal_VI)))
 
     # testing first-visit MC control
     Q_FVMCC, policy_FVMCC = MC_agent.OnPolicy_first_visit_MC_control()
     V_FVMCC = tabular_utils.Q_value_to_state_value(Q_FVMCC, policy_FVMCC)
     print(V_FVMCC)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_FVMCC))
-    print("mean abs error of value function by first-visit MC control: %5f" %np.mean(np.abs(V_FVMCC - V_optimal_VI)))
+    print("mean abs error of value function by first-visit MC control: %5f \n" %np.mean(np.abs(V_FVMCC - V_optimal_VI)))
+
+    # testing off-policy MC control
+    Q_OffMCC, policy_OffMCC = MC_agent.offPolicy_MC_control()
+    V_OffMCC = tabular_utils.Q_value_to_state_value(Q_OffMCC, policy_OffMCC)
+    print(V_OffMCC)
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_OffMCC))
+    print("mean abs error of value function by off-policy MC control: %5f \n" %np.mean(np.abs(V_OffMCC - V_optimal_VI)))
 
 
     if args.env_name == "Blackjack-v1":
