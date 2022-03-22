@@ -57,10 +57,44 @@ class Tabular_nStepTD:
         return V_est
 
 
-    # TODO: the rest algorithm will be implemented later
-    def nStep_sarsa(self):
-        pass
+    # TODO: evaluate n-step sarsa
+    def nStep_sarsa(self, n):
+        Q = np.zeros((self.env.nS, self.env.nA))
+        for epi in range(self.num_episodes):
+            S = []; R = []; A = []
+            s = self.env.reset()
+            S.append(s) # append intial state
+            a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
+            A.append(a)
+            T = float("inf")
+            t = 0
+            while True:
+                if t < T:
+                    s_next, r, done, _ = self.env.step(a)
+                    S.append(s_next); R.append(r)
+                    if done:
+                        T = t+1
+                    else:
+                        a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
+                        A.append(a)
+                tau = t - n + 1
+                if tau >= 0:
+                    # compute return G
+                    G = 0
+                    for i in range(tau+1, min(tau+n, T)+1):
+                        G += (self.gamma**(i-tau-1)) * R[i]
+                    if tau + n < T:
+                        G = G + (self.gamma**n) * Q[S[tau+n], A[tau+n]]
+                    Q[S[tau], Q[tau]] = Q[S[tau], A[tau]] + self.alpha * (G - Q[S[tau], A[tau]])
 
+                # move to next time step
+                s = s_next
+                t += 1
+
+                if tau == T-1:
+                    break
+        
+        return Q
 
 
 def parse_arguments():
