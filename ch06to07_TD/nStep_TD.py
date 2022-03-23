@@ -62,6 +62,7 @@ class Tabular_nStepTD:
         Q = np.zeros((self.env.nS, self.env.nA))
         for epi in range(self.num_episodes):
             S = []; R = []; A = []
+            R.append(0)
             s = self.env.reset()
             S.append(s) # append intial state
             a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
@@ -69,6 +70,7 @@ class Tabular_nStepTD:
             T = float("inf")
             t = 0
             while True:
+                # print("time step is %d" %t)
                 if t < T:
                     s_next, r, done, _ = self.env.step(a)
                     S.append(s_next); R.append(r)
@@ -85,7 +87,7 @@ class Tabular_nStepTD:
                         G += (self.gamma**(i-tau-1)) * R[i]
                     if tau + n < T:
                         G = G + (self.gamma**n) * Q[S[tau+n], A[tau+n]]
-                    Q[S[tau], Q[tau]] = Q[S[tau], A[tau]] + self.alpha * (G - Q[S[tau], A[tau]])
+                    Q[S[tau], A[tau]] = Q[S[tau], A[tau]] + self.alpha * (G - Q[S[tau], A[tau]])
 
                 # move to next time step
                 s = s_next
@@ -94,7 +96,9 @@ class Tabular_nStepTD:
                 if tau == T-1:
                     break
         
-        return Q
+        greedy_policy = self.tabularUtils.Q_value_to_greedy_policy(Q)
+
+        return Q, greedy_policy
 
 
 def parse_arguments():
@@ -115,7 +119,11 @@ if __name__ == "__main__":
     print(policy_optimal)
 
     nstep_td = Tabular_nStepTD(args)
-    V_est_nstepTD = nstep_td.nStepTD_prediction(policy_optimal, 5)
+    n = 5
+    V_est_nstepTD = nstep_td.nStepTD_prediction(policy_optimal, n)
     print(V_est_nstepTD)
 
     print("mean abs error of n-step TD prediction: %5f" %np.mean(np.abs(V_est_nstepTD - V_optimal_VI)))
+
+    Q_nStepSarsa, policy_nStepSarsa = nstep_td.nStep_sarsa(n)
+    print(policy_nStepSarsa)
