@@ -7,7 +7,7 @@ class TabularUtils:
 
     def epsilon_greedy_policy(self, policy_s_or_Q_s, ε=0.2):
         """ 
-        Creating epsilon greedy probabilities to sample from
+        Creating per-state epsilon greedy probabilities to sample from
         inputs: policy_s_or_Q_s, policy or q value at state s
         when ε=0, it is greedy 
         """
@@ -40,6 +40,16 @@ class TabularUtils:
         for s in range(Q.shape[0]):
             a_greedy = np.argmax(Q[s, :])
             policy[s, :] = self.action_to_onehot(a_greedy)
+        
+        return policy
+    
+
+    def Q_value_to_epison_greedy_policy(self, Q):
+        """ get ε-greedy policy from Q value"""
+        policy = np.zeros((self.env.nS, self.env.nA))
+        for s in range(Q.shape[0]):
+            a = self.epsilon_greedy_policy(Q[s, :])
+            policy[s, :] = self.action_to_onehot(a)
         
         return policy
     
