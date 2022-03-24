@@ -27,7 +27,7 @@ class Tabular_nStepTD:
             S = []
             S.append(s) # append intial state
             R = []
-            R.append(0)
+            R.append(0.0)
             while True:
                 if t < T:
                     a = np.argmax(policy[s])
@@ -61,7 +61,7 @@ class Tabular_nStepTD:
         Q = np.zeros((self.env.nS, self.env.nA))
         for epi in range(self.num_episodes):
             S = []; R = []; A = []
-            R.append(0)
+            R.append(0.0)
             s = self.env.reset()
             S.append(s) # append intial state
             a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
@@ -110,7 +110,7 @@ class Tabular_nStepTD:
         b = np.zeros((self.env.nS, self.env.nA))
         for epi in range(self.num_episodes):
             S = []; R = []; A = []
-            R.append(0)
+            R.append(0.0)
             s = self.env.reset()
             S.append(s) # append intial state
             a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
@@ -154,7 +154,51 @@ class Tabular_nStepTD:
 
 
     def nStep_tree_backup(self, n):
-        pass
+        Q = np.zeros((self.env.nS, self.env.nA))
+        pi = np.zeros((self.env.nS, self.env.nA))
+        for epi in range(self.num_episodes):
+            S = []; R = []; A = []
+            R.append(0.0)
+            s = self.env.reset()
+            S.append(s) # append intial state
+            a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
+            A.append(a)
+            T = float("inf")
+            t = 0
+            while True:
+                # print("time step is %d" %t)
+                if t < T:
+                    s_next, r, done, _ = self.env.step(a)
+                    S.append(s_next); R.append(r)
+                    if done:
+                        T = t+1
+                    else:
+                        a = self.tabularUtils.epsilon_greedy_policy(Q[s, :]) 
+                        A.append(a)
+                tau = t - n + 1
+                if tau >= 0:
+                    # compute return G
+                    G = 0
+                    if t+1 >= T:
+                        G = R[T]
+                    else:
+                        G += R[t] + self.gamma * np.dot(pi[S[t+1], :], Q[S[t+1], :])
+                    for k in reversed(range(tau+1, min(t, T-1))):
+                        # print("current k is %d" %k)
+                        G = R[k] + self.gamma * np.dot(np.delete(pi[S[k], :], a), np.delete(Q[S[k], :],a)) + \
+                            self.gamma * pi[S[k], A[k]] * G
+
+                    Q[S[tau], A[tau]] = Q[S[tau], A[tau]] + self.alpha * (G - Q[S[tau], A[tau]])
+                    pi = self.tabularUtils.Q_value_to_greedy_policy(Q)
+
+                # move to next time step
+                s = s_next
+                t += 1
+
+                if tau == T-1:
+                    break
+
+        return Q, pi
     
 
     def nStep_Q_delta(self, n):
@@ -177,7 +221,9 @@ if __name__ == "__main__":
 
     dp = Tabular_DP(args)
     V_optimal_VI, policy_optimal = dp.value_iteration()
+    print("Optimal value function from VI")
     print(V_optimal_VI)
+    print("Optimal policy from VI")
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_optimal))
 
     nstep_td = Tabular_nStepTD(args)
@@ -193,4 +239,8 @@ if __name__ == "__main__":
     Q_nStepOffPolicySarsa, policy_nStepOffPolicySarsa = nstep_td.nStep_sarsa(n)
     print("Policy from n-step off-policy sarsa")
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_nStepOffPolicySarsa))
+
+    Q_nStepTreeBackup, policy_nStepTreeBackup = nstep_td.nStep_tree_backup(n)
+    print("Policy from n-step tree backup")
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_nStepTreeBackup))
 
