@@ -61,3 +61,5 @@ class TabularUtils:
             V[s] = np.dot(Q[s, :], policy[s, :])
         
         return V
+    
+
