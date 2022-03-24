@@ -103,11 +103,14 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
     args.env = gym.make(args.env_name)
+    tabular_utils = TabularUtils(args.env)
 
     dp = Tabular_DP(args)
     V_optimal_VI, policy_optimal = dp.value_iteration()
+    print("Optimal value function from VI")
     print(V_optimal_VI)
-    print(policy_optimal)
+    print("Optimal policy from VI")
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_optimal))
 
     td = Tabular_TD(args)
     V_est_TD0 = td.TD0_prediction(policy_optimal)
@@ -115,10 +118,13 @@ if __name__ == "__main__":
     print("mean abs error of TD(0)prediction: %5f" %np.mean(np.abs(V_est_TD0 - V_optimal_VI)))
 
     Q_sarsa, policy_sarsa = td.sarsa()
-    print(policy_sarsa)
+    print("Policy from sarsa")
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_sarsa))
 
     Q_qlearing, policy_qlearing = td.Q_learning()
-    print(policy_qlearing)
+    print("Policy from Q learning")
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_qlearing))
 
     Q_dbQlearing, policy_dbQlearing = td.double_Q_learning()
-    print(policy_dbQlearing)
+    print("Policy from double Q learning")
+    print(tabular_utils.onehot_policy_to_deterministic_policy(policy_dbQlearing))
