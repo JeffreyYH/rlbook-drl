@@ -5,6 +5,14 @@ import gym
 import torch
 import collections, tqdm
 
+class LinearModel:
+    def __init__(self, nA, nS):
+        self.W = np.zeros((nA, nS))
+    
+    def forward(self, state):
+        state = np.expand_dims(state, axis=1)
+        return (self.W @ state)[:, 0]
+
 
 class FullyConnectedModel(torch.nn.Module):
 
