@@ -5,16 +5,18 @@ import gym
 import torch
 import collections, tqdm
 
-class LinearModel:
-    def __init__(self, nA, nS):
-        self.W = np.zeros((nA, nS))
+class LinearModel(torch.nn.Module):
+    def __init__(self, input_size, output_size):
+        super().__init__()
+        self.linear1 = torch.nn.Linear(input_size, output_size)
+        torch.nn.init.xavier_uniform_(self.linear1.weight)
     
-    def forward(self, state):
-        state = np.expand_dims(state, axis=1)
-        return (self.W @ state)[:, 0]
+    def forward(self, input):
+        x = self.linear1(input)
+        return x
 
 
-class FullyConnectedModel(torch.nn.Module):
+class MLP(torch.nn.Module):
 
     def __init__(self, input_size, output_size):
         super().__init__()
