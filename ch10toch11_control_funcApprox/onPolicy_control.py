@@ -23,8 +23,32 @@ class OnPolicy_Control:
             self.Q_func = LinearModel(self.nS, self.nA)
         elif self.funcApprox_type == "MLP":
             self.Q_func = MLP(self.nS, self.nA)
-
     
+
+    def test_policy(self):
+        """ test the learned policy"""
+        done = False
+        s = self.env.reset()
+        s_ts = torch.from_numpy(s).float()
+        a = self.tabularUtils.epsilon_greedy_policy(self.Q_func(s_ts).cpu().detach().numpy())
+        R_epi = 0
+        while not done:
+            s_next, r, done, _ = self.env.step(a)
+
+            # calculate total episode reward
+            R_epi += r
+            
+            a_next = self.tabularUtils.epsilon_greedy_policy(self.Q_func(s_ts).cpu().detach().numpy())
+            s_next_ts = torch.from_numpy(s_next).float()
+
+            # update for this iteration
+            s = s_next
+            s_ts = torch.from_numpy(s).float()
+            a = a_next
+        
+        return R_epi
+
+
     def episodic_semiGradient_sarsa(self):
         " episodic semi-gradient Sarsa for estimating optimal Q value"
         loss_format = torch.nn.MSELoss()
@@ -58,7 +82,8 @@ class OnPolicy_Control:
 
             # episode wrap-up
             if epi % 10 == 0:
-                print("Episode %d reward: %d" %(epi, R_epi))
+                R_epi_test = self.test_policy()
+                print("Episode %d, testing reward: %d" %(epi, R_epi_test))
 
 
 
