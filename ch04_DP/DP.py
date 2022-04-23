@@ -1,25 +1,51 @@
-import sys
+import sys, time, argparse
 import gym
 import numpy as np
 from tqdm import tqdm
-import argparse
-if "../" not in sys.path: sys.path.append("../")
-from lib.envs.gridworld import GridworldEnv
-import lib.envs.lake_envs as lake_env
+# if "../" not in sys.path: sys.path.append("../")
+# from lib.envs.gridworld import GridworldEnv
+# import lib.envs.lake_envs as lake_env
+
+
+# register a new deterministic environment
+from gym.envs.registration import register
+register(
+    id='FrozenLake-Deterministic-v1',
+    entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+)
 
 
 class Tabular_DP:
     def __init__(self, args):
         self.env = args.env
-        self.gamma = 1.0
+        self.gamma = 0.99
         self.theta = 1e-5
         self.max_iterations = 1000
+        self.nA = self.env.action_space.n
+        self.nS = self.env.observation_space.n
 
+
+    def render(self, policy):
+        s = self.env.reset()
+        done = False
+        t = 0
+        self.env.render()
+        while not done:
+            action = np.argmax(policy[s])
+            s_next, reward, done, info = self.env.step(action)
+            time.sleep(0.5)
+            s = s_next
+            t += 1
+            self.env.render()
+            if done:
+                print("Episode finished after {} timesteps".format(t+1))
+            
 
     def compute_q_value_cur_state(self, s, value_func):
-        q_s = np.zeros(self.env.nA)
+        q_s = np.zeros(self.nA)
         # all each possible action a, get the action-value function
-        for a in range(self.env.nA):
+        for a in range(self.nA):
             curr_q = 0
             for P_trans, s_next, reward, is_done in self.env.P[s][a]:
                 curr_q += P_trans * (reward + self.gamma * value_func[s_next])
@@ -29,7 +55,7 @@ class Tabular_DP:
 
     def action_to_onehot(self, a):
         """ convert single action to onehot vector"""
-        a_onehot = np.zeros(self.env.nA)
+        a_onehot = np.zeros(self.nA)
         a_onehot[a] = 1
         return a_onehot
 
@@ -39,11 +65,11 @@ class Tabular_DP:
         for n_iter in range(1, self.max_iterations+1):
             # for each state
             Delta = 0
-            for s in range(self.env.nS):
+            for s in range(self.nS):
                 pre_v_s = value_func[s]
                 V_s = 0
                 # for each action in current state
-                for a in range(self.env.nA):
+                for a in range(self.nA):
                     # get the probability of taking action a at current state s
                     P_a = policy[s, a]
                     # for each possible NEXT state taking action a at current state s
@@ -63,7 +89,7 @@ class Tabular_DP:
     def policy_improvement(self, value_func, policy):
         policy_stable = True
         policy_new = policy
-        for s in range(self.env.nS):
+        for s in range(self.nS):
             # action from the policy before policy improvement
             old_a = np.argmax(policy[s])
             # compute action-value function q(s,a) by one step of lookahead
@@ -79,8 +105,8 @@ class Tabular_DP:
 
 
     def policy_iteration(self):
-        policy = np.zeros([self.env.nS, self.env.nA])
-        value_func = np.zeros(self.env.nS)
+        policy = np.zeros([self.nS, self.nA])
+        value_func = np.zeros(self.nS)
 
         # iteratively evaluate the policy and improve the policy
         total_num_policy_eval = 0
@@ -97,10 +123,10 @@ class Tabular_DP:
 
     def value_iteration(self):
         # initialize the value function
-        value_func = np.zeros(self.env.nS)
+        value_func = np.zeros(self.nS)
         for n_iter in range(1, self.max_iterations+1):
             Delta = 0
-            for s in range(self.env.nS):
+            for s in range(self.nS):
                 pre_v_s = value_func[s]
                 # we have to compute q[s] in each iteration from scratch
                 # and compare it with the q value in previous iteration
@@ -117,8 +143,8 @@ class Tabular_DP:
         V_optimal = value_func
 
         # output the deterministic policy with optimal value function
-        policy_optimal = np.zeros([self.env.nS, self.env.nA])
-        for s in range(self.env.nS):
+        policy_optimal = np.zeros([self.nS, self.nA])
+        for s in range(self.nS):
             q_s = self.compute_q_value_cur_state(s, V_optimal)
             # choose optimal action
             a_optimal = np.argmax(q_s)
@@ -130,10 +156,12 @@ class Tabular_DP:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
+                        default="FrozenLake-Deterministic-v1", 
+                        # "FrozenLakeNotSlippery-v1"
                         # default="Deterministic-4x4-FrozenLake-v0", 
                         # default="gridworld", 
-                        choices=["gridworld", "FrozenLake-v1", 'Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0'])
+                        choices=["gridworld", "FrozenLake-v1", 'FrozenLake-Deterministic-v1', 
+                        'Deterministic-4x4-FrozenLake-v0', 'Deterministic-8x8-FrozenLake-v0'])
     return parser.parse_args()
 
 
@@ -161,3 +189,6 @@ if __name__ == "__main__":
     print(V_optimal)
     print("Optimal policy: ")
     print(policy_optimal)
+
+    # render
+    dp.render(policy_optimal)
