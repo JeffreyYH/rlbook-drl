@@ -26,8 +26,8 @@ class Tabular_MC:
         self.env = args.env
         self.num_episodes = 10000
         self.max_steps = 1000
-        self.epislon = 0.2
-        self.gamma = 0.99
+        self.epislon = 0.1
+        self.gamma = 0.9
         self.env_nA = self.env.action_space.n
         self.env_nS = self.env.observation_space.n
         self.tabularUtils = TabularUtils(self.env)
@@ -240,7 +240,6 @@ if __name__ == "__main__":
     print(V_MCES)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_MCES))
     print("mean abs error of value function by MC exploring start: %5f \n" %np.mean(np.abs(V_MCES - V_optimal_VI)))
-    tabular_utils.render(policy_MCES)
 
     # testing first-visit MC control
     Q_FVMCC, policy_FVMCC = MC_agent.OnPolicy_first_visit_MC_control()
@@ -255,6 +254,9 @@ if __name__ == "__main__":
     print(V_OffMCC)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_OffMCC))
     print("mean abs error of value function by off-policy MC control: %5f \n" %np.mean(np.abs(V_OffMCC - V_optimal_VI)))
+
+    learned_policy = policy_FVMCC
+    tabular_utils.render(learned_policy)
 
 
     if args.env_name == "Blackjack-v1":
