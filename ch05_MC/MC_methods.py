@@ -17,7 +17,8 @@ from ch04_DP.DP import Tabular_DP
 from gym.envs.registration import register
 register(
     id='FrozenLake-Deterministic-v1',
-    entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    # entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    entry_point='lib.envs.myFrozenLake:FrozenLakeEnv',
     kwargs={'map_name' : '4x4', 'is_slippery': False},
 )
 
@@ -27,7 +28,7 @@ class Tabular_MC:
         self.num_episodes = 10000
         self.max_steps = 1000
         self.epislon = 0.1
-        self.gamma = 0.9
+        self.gamma = 0.99
         self.env_nA = self.env.action_space.n
         self.env_nS = self.env.observation_space.n
         self.tabularUtils = TabularUtils(self.env)

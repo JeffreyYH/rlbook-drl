@@ -1,3 +1,4 @@
 gitpush.sh
 */__pycache__/
 lib/envs/__pycache__/
+lib/envs/img/
