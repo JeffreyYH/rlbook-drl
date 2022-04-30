@@ -2,7 +2,8 @@ import sys, time, argparse
 import gym
 import numpy as np
 from tqdm import tqdm
-# if "../" not in sys.path: sys.path.append("../")
+if "../" not in sys.path: sys.path.append("../")
+from lib.common_utils import TabularUtils
 # from lib.envs.gridworld import GridworldEnv
 # import lib.envs.lake_envs as lake_env
 
@@ -25,22 +26,6 @@ class Tabular_DP:
         self.nA = self.env.action_space.n
         self.nS = self.env.observation_space.n
 
-
-    def render(self, policy):
-        s = self.env.reset()
-        done = False
-        t = 0
-        self.env.render()
-        while not done:
-            action = np.argmax(policy[s])
-            s_next, reward, done, info = self.env.step(action)
-            time.sleep(0.5)
-            s = s_next
-            t += 1
-            self.env.render()
-            if done:
-                print("Episode finished after {} timesteps".format(t+1))
-            
 
     def compute_q_value_cur_state(self, s, value_func):
         q_s = np.zeros(self.nA)
@@ -191,4 +176,5 @@ if __name__ == "__main__":
     print(policy_optimal)
 
     # render
-    dp.render(policy_optimal)
+    tabularUtils = TabularUtils(args.env)
+    tabularUtils.render(policy_optimal)
