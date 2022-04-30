@@ -1,5 +1,5 @@
 from ast import Return
-import sys
+import sys, time
 import gym
 import numpy as np
 from collections import defaultdict
@@ -11,16 +11,25 @@ from blackjack_example import plot_value_function, handcrafted_episode
 if "../" not in sys.path: sys.path.append("../")
 from lib.common_utils import TabularUtils
 from ch04_DP.DP import Tabular_DP
-from lib.envs.gridworld import GridworldEnv
+# from lib.envs.gridworld import GridworldEnv
 
+# register a new deterministic environment
+from gym.envs.registration import register
+register(
+    id='FrozenLake-Deterministic-v1',
+    entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+)
 
 class Tabular_MC:
     def __init__(self, args):
         self.env = args.env
         self.num_episodes = 10000
         self.max_steps = 1000
-        self.epislon = 0.1
-        self.gamma = 1.0
+        self.epislon = 0.2
+        self.gamma = 0.99
+        self.env_nA = self.env.action_space.n
+        self.env_nS = self.env.observation_space.n
         self.tabularUtils = TabularUtils(self.env)
 
 
@@ -37,7 +46,7 @@ class Tabular_MC:
         episode = []
         for step in range(self.max_steps):
             if step == 0 and use_ES:
-                action = np.random.choice(self.env.nA)
+                action = np.random.choice(self.env_nA)
             else:
                 action = self.tabularUtils.epsilon_greedy_policy(policy[curr_state, :])
             next_state, reward, done, _ = self.env.step(action)
@@ -86,9 +95,9 @@ class Tabular_MC:
 
     def init_policy(self):
         """ initialize policy with random action for each state"""
-        policy = np.zeros([self.env.nS, self.env.nA])
-        # for s in range(self.env.nS):
-        #     a = np.random.choice(self.env.nA)
+        policy = np.zeros([self.env_nS, self.env_nA])
+        # for s in range(self.env_nS):
+        #     a = np.random.choice(self.env_nA)
         #     policy[s, :] = self.action_to_onehot(a) 
         return policy
 
@@ -97,11 +106,11 @@ class Tabular_MC:
         """ Monte Carlo ES (Exploring Starts) """
         # TODO: does not work so well
         Returns = {}
-        for s in range(self.env.nS):
+        for s in range(self.env_nS):
             Returns[s] = {}
-            for a in range(self.env.nA):
+            for a in range(self.env_nA):
                 Returns[s][a] = []
-        Q = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
         # here we use deterministic policy 
         policy = self.init_policy()
 
@@ -131,11 +140,11 @@ class Tabular_MC:
         """ On-policy first-visit MC control """
         # TODO: does not work so well
         Returns = {}
-        for s in range(self.env.nS):
+        for s in range(self.env_nS):
             Returns[s] = {}
-            for a in range(self.env.nA):
+            for a in range(self.env_nA):
                 Returns[s][a] = []
-        Q = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
         policy = self.init_policy()
 
         for i_episode in tqdm(range(self.num_episodes)):
@@ -153,11 +162,11 @@ class Tabular_MC:
                 Returns[s_t][a_t].append(G)
                 Q[s_t][a_t] = np.mean(np.array(Returns[s_t][a_t]))
                 a_optimal = np.argmax(Q[s_t, :])
-                for a in range(self.env.nA):
+                for a in range(self.env_nA):
                     if a == a_optimal:
-                        policy[s_t, a] = 1 - self.epislon + self.epislon/self.env.nA
+                        policy[s_t, a] = 1 - self.epislon + self.epislon/self.env_nA
                     else:
-                        policy[s_t, a] = self.epislon / self.env.nA
+                        policy[s_t, a] = self.epislon / self.env_nA
                 visited_SA.append([s_t, a_t])
 
         # print(Q)
@@ -167,8 +176,8 @@ class Tabular_MC:
 
     def offPolicy_MC_control(self):
         """ off-policy MC control via importance sampling"""
-        Q = np.zeros((self.env.nS, self.env.nA))
-        C = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
+        C = np.zeros((self.env_nS, self.env_nA))
         pi = self.init_policy()
         for i_episode in tqdm(range(self.num_episodes)):
             b = pi
@@ -194,9 +203,9 @@ class Tabular_MC:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
+                        default="FrozenLake-Deterministic-v1", 
                         # default="gridworld", 
-                        choices=["Blackjack-v1", "gridworld", "FrozenLake-v1"])
+                        choices=["Blackjack-v1", "gridworld", "FrozenLake-Deterministic-v1", "FrozenLake-v1"])
     return parser.parse_args()
 
 
@@ -219,7 +228,7 @@ if __name__ == "__main__":
     # testing first-visit MC prediction
     MC_agent = Tabular_MC(args)
     V_MC = MC_agent.first_visit_MC_prediction(policy_optimal)
-    V_MC_np = np.zeros(args.env.nS)
+    V_MC_np = np.zeros(args.env.observation_space.n)
     for key, value in V_MC.items():
         V_MC_np[key] = value
     print(V_MC_np)
@@ -231,6 +240,7 @@ if __name__ == "__main__":
     print(V_MCES)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_MCES))
     print("mean abs error of value function by MC exploring start: %5f \n" %np.mean(np.abs(V_MCES - V_optimal_VI)))
+    tabular_utils.render(policy_MCES)
 
     # testing first-visit MC control
     Q_FVMCC, policy_FVMCC = MC_agent.OnPolicy_first_visit_MC_control()
@@ -238,7 +248,7 @@ if __name__ == "__main__":
     print(V_FVMCC)
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_FVMCC))
     print("mean abs error of value function by first-visit MC control: %5f \n" %np.mean(np.abs(V_FVMCC - V_optimal_VI)))
-
+    
     # testing off-policy MC control
     Q_OffMCC, policy_OffMCC = MC_agent.offPolicy_MC_control()
     V_OffMCC = tabular_utils.Q_value_to_state_value(Q_OffMCC, policy_OffMCC)
