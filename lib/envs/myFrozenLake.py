@@ -188,9 +188,9 @@ class FrozenLakeEnv(Env):
             elif newletter == b"H":
                 reward = -1.0
             elif newletter == b"S":
-                reward = 0
+                reward = -0.1
             else:
-                reward = 0.1
+                reward = -0.1
             return newstate, reward, done
 
         for row in range(nrow):
