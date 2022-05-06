@@ -7,19 +7,29 @@ if "../" not in sys.path: sys.path.append("../")
 from lib.common_utils import TabularUtils
 from ch04_DP.DP import Tabular_DP
 
+# register a new deterministic environment
+from gym.envs.registration import register
+register(
+    id='FrozenLake-Deterministic-v1',
+    # entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    entry_point='lib.envs.myFrozenLake:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+)
 
 class Tabular_TD:
     def __init__(self, args):
         self.env = args.env
         self.num_episodes=10000
-        self.gamma = 1.0
+        self.gamma = 0.99
         self.alpha = 0.05
+        self.env_nA = self.env.action_space.n
+        self.env_nS = self.env.observation_space.n
         self.tabularUtils = TabularUtils(self.env)
     
 
     def TD0_prediction(self, policy):
         """ policy evalution with TD(0)"""
-        V_est = np.zeros(self.env.nS)
+        V_est = np.zeros(self.env_nS)
         for epi in range(self.num_episodes):
             done = False
             s = self.env.reset()
@@ -33,7 +43,7 @@ class Tabular_TD:
 
     def sarsa(self):
         """sarsa: on-policy TD control"""
-        Q = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
         for epi in range(self.num_episodes):
             done = False
             s = self.env.reset()
@@ -57,7 +67,7 @@ class Tabular_TD:
         1. the behavior policy: epsilon-greedy
         2. the target policy: greedy, which is used to update the Q function
         """
-        Q = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
         for epi in range(self.num_episodes):
             done = False
             s = self.env.reset()
@@ -73,8 +83,8 @@ class Tabular_TD:
     
 
     def double_Q_learning(self):
-        Q1 = np.zeros((self.env.nS, self.env.nA))
-        Q2 = np.zeros((self.env.nS, self.env.nA))
+        Q1 = np.zeros((self.env_nS, self.env_nA))
+        Q2 = np.zeros((self.env_nS, self.env_nA))
         for epi in range(self.num_episodes):
             done = False
             s = self.env.reset()
@@ -95,7 +105,7 @@ class Tabular_TD:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
+                        default="FrozenLake-Deterministic-v1",
                         choices=["gridworld", "FrozenLake-v1"])
     return parser.parse_args()
 
@@ -128,3 +138,6 @@ if __name__ == "__main__":
     Q_dbQlearing, policy_dbQlearing = td.double_Q_learning()
     print("Policy from double Q learning")
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_dbQlearing))
+
+    learned_policy = policy_qlearing
+    tabular_utils.render(learned_policy)

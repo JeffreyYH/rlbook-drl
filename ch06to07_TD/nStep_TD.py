@@ -8,17 +8,27 @@ from lib.common_utils import TabularUtils
 from ch04_DP.DP import Tabular_DP
 from TD_learning import Tabular_TD
 
+# register a new deterministic environment
+from gym.envs.registration import register
+register(
+    id='FrozenLake-Deterministic-v1',
+    # entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    entry_point='lib.envs.myFrozenLake:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+)
 
 class Tabular_nStepTD:
     def __init__(self, args):
         self.env = args.env
         self.num_episodes=10000
-        self.gamma = 1.0
+        self.gamma = 0.99
         self.alpha = 0.05
+        self.env_nA = self.env.action_space.n
+        self.env_nS = self.env.observation_space.n
         self.tabularUtils = TabularUtils(self.env)
     
     def nStepTD_prediction(self, policy, n):
-        V_est = np.zeros(self.env.nS)
+        V_est = np.zeros(self.env_nS)
         for epi in range(self.num_episodes):
             done = False
             t = 0
@@ -58,7 +68,7 @@ class Tabular_nStepTD:
 
 
     def nStep_sarsa(self, n):
-        Q = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
         for epi in range(self.num_episodes):
             S = []; R = []; A = []
             R.append(0.0)
@@ -105,9 +115,9 @@ class Tabular_nStepTD:
         policy pi is a greedy policy regarding Q 
         policy b, the behaviour policy is a epsilon-greedy policy regarding Q
         """
-        Q = np.zeros((self.env.nS, self.env.nA))
-        pi = np.zeros((self.env.nS, self.env.nA))
-        b = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
+        pi = np.zeros((self.env_nS, self.env_nA))
+        b = np.zeros((self.env_nS, self.env_nA))
         for epi in range(self.num_episodes):
             S = []; R = []; A = []
             R.append(0.0)
@@ -154,8 +164,8 @@ class Tabular_nStepTD:
 
 
     def nStep_tree_backup(self, n):
-        Q = np.zeros((self.env.nS, self.env.nA))
-        pi = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
+        pi = np.zeros((self.env_nS, self.env_nA))
         for epi in range(self.num_episodes):
             S = []; R = []; A = []
             R.append(0.0)
@@ -209,7 +219,7 @@ class Tabular_nStepTD:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
+                        default="FrozenLake-Deterministic-v1",
                         choices=["gridworld", "FrozenLake-v1"])
     return parser.parse_args()
 
@@ -243,4 +253,7 @@ if __name__ == "__main__":
     Q_nStepTreeBackup, policy_nStepTreeBackup = nstep_td.nStep_tree_backup(n)
     print("Policy from n-step tree backup")
     print(tabular_utils.onehot_policy_to_deterministic_policy(policy_nStepTreeBackup))
+
+    learned_policy = policy_nStepSarsa
+    tabular_utils.render(learned_policy)
 
