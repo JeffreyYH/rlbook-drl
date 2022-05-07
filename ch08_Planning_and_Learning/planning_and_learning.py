@@ -9,24 +9,34 @@ if "../" not in sys.path: sys.path.append("../")
 from lib.common_utils import TabularUtils
 from ch04_DP.DP import Tabular_DP
 
+# register a new deterministic environment
+from gym.envs.registration import register
+register(
+    id='FrozenLake-Deterministic-v1',
+    # entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    entry_point='lib.envs.myFrozenLake:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+)
 
 class Tabular_Planning_Learning:
     def __init__(self, args):
         self.env = args.env
         self.num_episodes=1000
-        self.gamma = 1.0
+        self.gamma = 0.99
         self.alpha = 0.05
+        self.env_nA = self.env.action_space.n
+        self.env_nS = self.env.observation_space.n
         self.tabularUtils = TabularUtils(self.env)
         self.num_iter_model = 1000
 
 
     def Dyna_Q(self):
-        Q = np.zeros((self.env.nS, self.env.nA))
+        Q = np.zeros((self.env_nS, self.env_nA))
         # initialize model
         model = {}
-        for s in range(self.env.nS):
-            for a in range(self.env.nA):
-                s_next = np.random.choice(self.env.nS)
+        for s in range(self.env_nS):
+            for a in range(self.env_nA):
+                s_next = np.random.choice(self.env_nS)
                 r = np.random.choice(self.env.reward_range)
                 model[(s,a)] = (r, s_next)
         states_list = []
@@ -62,7 +72,7 @@ class Tabular_Planning_Learning:
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', dest='env_name', type=str,
-                        default="FrozenLake-v1", 
+                        default="FrozenLake-Deterministic-v1",
                         choices=["gridworld", "FrozenLake-v1"])
     return parser.parse_args()
 
@@ -70,7 +80,8 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
     args.env = gym.make(args.env_name)
-    
+    tabular_utils = TabularUtils(args.env)
+
     dp = Tabular_DP(args)
     V_optimal_VI, policy_optimal = dp.value_iteration()
     print(policy_optimal)
@@ -78,6 +89,9 @@ if __name__ == "__main__":
     planning_learning = Tabular_Planning_Learning(args)
     Q_dyna, policy_dyna = planning_learning.Dyna_Q()
 
-    print(policy_optimal - policy_dyna)
+    # print(policy_optimal - policy_dyna)
+
+    learned_policy = policy_dyna
+    tabular_utils.render(learned_policy)
 
 
