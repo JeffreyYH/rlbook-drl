@@ -12,15 +12,8 @@ if "../" not in sys.path: sys.path.append("../")
 from lib.common_utils import TabularUtils
 from ch04_DP.DP import Tabular_DP
 # from lib.envs.gridworld import GridworldEnv
+from lib.regEnvs import *
 
-# register a new deterministic environment
-from gym.envs.registration import register
-register(
-    id='FrozenLake-Deterministic-v1',
-    # entry_point='gym.envs.toy_text:FrozenLakeEnv',
-    entry_point='lib.envs.myFrozenLake:FrozenLakeEnv',
-    kwargs={'map_name' : '4x4', 'is_slippery': False},
-)
 
 class Tabular_MC:
     def __init__(self, args):
