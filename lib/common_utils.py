@@ -80,5 +80,12 @@ class TabularUtils:
             self.env.render()
             if done:
                 print("Episode finished after {} timesteps".format(t+1))
+
+
+
+class BoxUtils(TabularUtils):
+    def __init__(self, env) -> None:
+        self.env = env
+        self.env_nS = self.env.observation_space.shape[0]
     
 
